@@ -46,7 +46,8 @@ export function AdjustBalanceDialog({ open, onClose, currentValue, label, type }
         description: `Aggiustamento manuale (${label})`,
         amount: Math.abs(diff),
         type: txType,
-        category_id: "other", // assuming 'other' exists or just a generic string
+        category_id: null,
+        status: 'confirmed',
         is_recurring: false,
         interval: "monthly",
         recurring_end: null,

@@ -43,9 +43,11 @@ function avgVariableExpenses(transactions: Transaction[]): number {
  * Compute baseline current balance from all transactions.
  */
 function computeCurrentBalance(transactions: Transaction[]): number {
-  return transactions.reduce((sum, t) => {
-    return t.type === "income" ? sum + t.amount : sum - t.amount;
-  }, 0);
+  return transactions
+    .filter(t => t.status === 'confirmed')
+    .reduce((sum, t) => {
+      return t.type === "income" ? sum + t.amount : sum - t.amount;
+    }, 0);
 }
 
 /**

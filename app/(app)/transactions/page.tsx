@@ -104,7 +104,7 @@ export default function TransactionsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 700 }}>Transazioni</h1>
           <p style={{ color: "var(--text-secondary)", marginTop: 4 }}>
@@ -130,8 +130,8 @@ export default function TransactionsPage() {
       </div>
 
       {/* Filters */}
-      <div className="glass" style={{ padding: 16, display: "flex", gap: 12, alignItems: "center" }}>
-        <div style={{ position: "relative", flex: 1 }}>
+      <div className="glass filter-row" style={{ padding: 16, display: "flex", gap: 12, alignItems: "center" }}>
+        <div style={{ position: "relative", flex: "1 1 200px", minWidth: 200 }}>
           <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
           <input
             value={search}
@@ -181,8 +181,8 @@ export default function TransactionsPage() {
       </div>
 
       {/* Table */}
-      <div className="glass" style={{ overflow: "hidden" }}>
-        <div style={{ overflowX: "auto" }}>
+      <div className="glass table-wrap" style={{ overflow: "hidden", width: "100%" }}>
+        <div style={{ overflowX: "auto", width: "100%" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border-subtle)" }}>
@@ -231,6 +231,7 @@ export default function TransactionsPage() {
                     borderBottom: "1px solid var(--border-subtle)",
                     background: isSelected ? "var(--bg-subtle)" : "transparent",
                     transition: "background 0.12s",
+                    opacity: tx.status === 'planned' ? 0.65 : 1,
                   }}
                   onMouseOver={e => (!isSelected && (e.currentTarget.style.background = "rgba(255,255,255,0.025)"))}
                   onMouseOut={e => (!isSelected && (e.currentTarget.style.background = "transparent"))}
@@ -251,6 +252,11 @@ export default function TransactionsPage() {
                         <span style={{ fontSize: 11, color: "var(--accent-purple)" }}>
                           ricorrente · {tx.interval}
                         </span>
+                      </div>
+                    )}
+                    {tx.status === 'planned' && (
+                      <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2, display: "flex", alignItems: "center", gap: 3 }}>
+                        <CheckSquare size={10} /> Pianificata
                       </div>
                     )}
                   </td>

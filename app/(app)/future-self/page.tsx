@@ -168,7 +168,7 @@ export default function FutureSelfPage() {
       </div>
 
       {/* Milestone cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+      <div className="milestone-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
         {milestones.map(({ months, balance, whatIfBalance }) => (
           <MilestoneCard
             key={months}
@@ -180,7 +180,7 @@ export default function FutureSelfPage() {
       </div>
 
       {/* Controls */}
-      <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+      <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
         {[6, 12, 24].map((m) => {
           const locked = !isPro && m > 6;
           return (

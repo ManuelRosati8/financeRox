@@ -61,6 +61,7 @@ create table if not exists public.transactions (
   is_recurring    boolean not null default false,
   interval        text check (interval in ('daily', 'weekly', 'monthly', 'yearly')),
   recurring_end   date,                            -- null = indefinite
+  status          text not null default 'confirmed' check (status in ('confirmed', 'planned')),
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );

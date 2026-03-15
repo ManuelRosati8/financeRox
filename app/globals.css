@@ -127,7 +127,10 @@ html, body {
 
 /* ─── RESPONSIVE ─── */
 .mobile-nav   { display: none; }
-.sidebar-desktop { display: flex; }
+  .kpi-grid              { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .dashboard-main-grid   { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
+  .goals-grid            { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .milestone-grid        { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 
 @media (max-width: 768px) {
   .sidebar-desktop { display: none !important; }
@@ -136,19 +139,39 @@ html, body {
     margin-left: 0 !important;
     max-width: 100% !important;
     padding: 16px 16px 80px !important;
+    overflow-x: hidden !important;
   }
-  .kpi-grid              { grid-template-columns: repeat(2, 1fr) !important; }
-  .dashboard-main-grid   { grid-template-columns: 1fr !important; }
+  .kpi-grid              { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
+  .dashboard-main-grid   { grid-template-columns: 1fr !important; gap: 16px !important; }
   .goals-grid            { grid-template-columns: 1fr !important; }
   .milestone-grid        { grid-template-columns: 1fr !important; }
   .whatif-grid           { grid-template-columns: 1fr !important; }
-  .filter-row            { flex-wrap: wrap !important; }
+  .goals-grid            { grid-template-columns: 1fr !important; }
+  .milestone-grid        { grid-template-columns: 1fr !important; }
+  .whatif-grid           { grid-template-columns: 1fr !important; }
+  
+  .filter-row            { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
+  .header-row            { flex-wrap: wrap !important; gap: 14px !important; }
+  
   .hide-mobile           { display: none !important; }
-  .table-wrap            { overflow-x: auto; }
+  .table-wrap            { overflow-x: auto; width: 100%; border-radius: 14px; }
+  
+  /* FAB above mobile nav */
+  .quick-add-fab {
+    bottom: 80px !important;
+    right: 20px !important;
+  }
+  
+  /* Make cards pad less on mobile */
+  .glass {
+    padding: 16px !important;
+  }
 }
 
 @media (max-width: 480px) {
-  .kpi-grid { grid-template-columns: 1fr 1fr !important; }
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .header-row h1 { font-size: 22px !important; }
+  .mobile-card-text { font-size: 11px !important; }
 }
 
 /* Recharts — theme-aware */

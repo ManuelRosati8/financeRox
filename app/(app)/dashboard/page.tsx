@@ -103,13 +103,17 @@ export default function DashboardPage() {
     });
     const income   = thisMonth.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0);
     const expenses = thisMonth.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
-    const balance  = transactions.reduce((s, t) => t.type === "income" ? s + t.amount : s - t.amount, 0);
     const savingsRate = income > 0 ? Math.round(((income - expenses) / income) * 100) : 0;
 
-    // Calculate "Safe to Spend" (Denaro Libero)
-    // Formula: Current Balance - (Sum of recurring expenses from tomorrow to end of month)
+    // ── Balance calculations ──
+    // Only confirmed transactions affect the current balance
+    const balance = transactions
+      .filter(t => t.status === 'confirmed')
+      .reduce((acc, t) => t.type === "income" ? acc + t.amount : acc - t.amount, 0);
+
+    // Safe to spend: current balance minus upcoming planned expenses for this month
     const today = new Date();
-    const eom = new Date(today.getFullYear(), today.getMonth() + 1, 0); // last day of current month
+    const eom = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     
     // Get unique recurring expenses
     const recurringMap = new Map<string, typeof transactions[0]>();
@@ -169,7 +173,7 @@ export default function DashboardPage() {
       {/* ── Action guide banner ── */}
       <div className="fade-up" style={{
         display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
-        padding: "13px 18px", borderRadius: 12,
+        padding: "16px 20px", borderRadius: 12,
         background: "var(--accent-dim)",
         border: "1px solid rgba(124,111,247,0.2)",
         animationDelay: "0.05s",
@@ -205,6 +209,7 @@ export default function DashboardPage() {
         background: "linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.02))",
         border: "1px solid rgba(16,185,129,0.2)",
         animationDelay: "0.1s",
+        width: "100%"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--income-color)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(16,185,129,0.2)" }}>
@@ -262,7 +267,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main grid — 2-col desktop, 1-col mobile */}
-      <div className="dashboard-main-grid" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 18 }}>
+      <div className="dashboard-main-grid" style={{ display: "grid", gap: 18 }}>
 
         {/* Left column: bar chart + recent transactions */}
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>

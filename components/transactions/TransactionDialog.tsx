@@ -32,6 +32,7 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
   const [categoryId,  setCategoryId]  = useState("");
   const [isRecurring, setRecurring]   = useState(false);
   const [interval,    setInterval]    = useState<RecurringInterval>("monthly");
+  const [status,      setStatus]      = useState<'confirmed' | 'planned'>("confirmed");
   const [loading,     setLoading]     = useState(false);
 
   const isEdit = !!initialData;
@@ -51,8 +52,17 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
       setType("expense"); setAmount(""); setDescription("");
       setDate(initialDate || new Date().toISOString().split("T")[0]);
       setCategoryId(""); setRecurring(false); setInterval("monthly");
+      setStatus("confirmed");
     }
   }, [initialData, initialDate, open]);
+
+  // Auto-status based on date (only for new transactions)
+  useEffect(() => {
+    if (!isEdit && date) {
+      const today = new Date().toISOString().split("T")[0];
+      setStatus(date > today ? "planned" : "confirmed");
+    }
+  }, [date, isEdit]);
 
   if (!open) return null;
 
@@ -68,6 +78,7 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
       category_id: categoryId || null,
       is_recurring: isRecurring,
       interval: isRecurring ? interval : null,
+      status,
       recurring_end: null,
     };
     try {
@@ -190,6 +201,25 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
                 ))}
               </select>
             </label>
+          </div>
+
+          {/* Status Selection */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {(["confirmed", "planned"] as const).map((s) => (
+              <button
+                key={s} type="button"
+                onClick={() => setStatus(s)}
+                style={{
+                  padding: "10px 0", borderRadius: 10, border: "1px solid",
+                  cursor: "pointer", fontSize: 13, fontWeight: 600, transition: "all 0.15s",
+                  borderColor: status === s ? "var(--accent)" : "var(--border-subtle)",
+                  background: status === s ? "rgba(245,158,11,0.15)" : "var(--bg-subtle)",
+                  color: status === s ? "var(--accent)" : "var(--text-secondary)",
+                }}
+              >
+                {s === "confirmed" ? "✅ Confermato" : "⏳ Pianificato"}
+              </button>
+            ))}
           </div>
 
           {/* Recurring toggle */}

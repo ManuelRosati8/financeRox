@@ -23,6 +23,7 @@ export interface Transaction {
   is_recurring: boolean;
   interval: RecurringInterval | null;
   recurring_end: string | null;
+  status: 'confirmed' | 'planned';
   created_at: string;
 }
 

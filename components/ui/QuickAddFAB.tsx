@@ -11,6 +11,7 @@ export function QuickAddFAB() {
     <>
       <button
         onClick={() => setOpen(true)}
+        className="quick-add-fab"
         title="Aggiungi transazione"
         style={{
           position: "fixed",

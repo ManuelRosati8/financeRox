@@ -101,8 +101,8 @@ export default function RegisterPage() {
               {error}
             </div>
           )}
-          <div style={{ display: "flex", gap: 12 }}>
-            <div style={{ position: "relative", flex: 1 }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ position: "relative", flex: "1 1 200px" }}>
               <User size={16} color="var(--text-muted)" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
               <input 
                 name="nome" type="text" required placeholder="Nome"
@@ -114,7 +114,7 @@ export default function RegisterPage() {
                 onBlur={(e) => e.target.style.borderColor = "var(--border-subtle)"}
               />
             </div>
-            <div style={{ position: "relative", flex: 1 }}>
+            <div style={{ position: "relative", flex: "1 1 200px" }}>
               <User size={16} color="var(--text-muted)" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
               <input 
                 name="cognome" type="text" required placeholder="Cognome"
