@@ -10,6 +10,7 @@ import { MoneyValue } from "@/components/ui/MoneyValue";
 import { useProfile } from "@/lib/supabase/hooks";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect } from "react";
+import { useI18n } from "@/lib/i18n/context";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -62,6 +63,7 @@ export default function SettingsPage() {
   const { theme, toggleTheme } = useTheme();
   const { data: profile } = useProfile();
   const supabase = createClient();
+  const { t, locale, setLocale } = useI18n();
 
   // Local form state
   const [fullName, setFullName]   = useState("");
@@ -102,15 +104,15 @@ export default function SettingsPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 640 }}>
       {/* Header */}
       <div className="fade-up">
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>Impostazioni</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700 }}>{t("settings.title")}</h1>
         <p style={{ color: "var(--text-secondary)", marginTop: 4, fontSize: 13 }}>
-          Gestisci account, preferenze e sicurezza
+          {t("settings.subtitle")}
         </p>
       </div>
 
       {/* ── Account ── */}
-      <Section title="Account">
-        <SettingRow icon={User} label="Nome completo">
+      <Section title={t("settings.account")}>
+        <SettingRow icon={User} label={t("settings.fullName")}>
           <input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -122,7 +124,7 @@ export default function SettingsPage() {
           />
         </SettingRow>
 
-        <SettingRow icon={Mail} label="Email" description="Usata per login e notifiche">
+        <SettingRow icon={Mail} label={t("settings.email")} description={t("settings.emailNote")}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <input
               value={email}
@@ -135,12 +137,12 @@ export default function SettingsPage() {
               }}
             />
             <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: "var(--income-color)", fontWeight: 600 }}>
-              ✓ verificata
+              {t("common.verified")}
             </span>
           </div>
         </SettingRow>
 
-        <SettingRow icon={Globe} label="Valuta" description="Usata per tutti i valori monetari">
+        <SettingRow icon={Globe} label={t("settings.currency")} description={t("settings.currencyNote")}>
           <select
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
@@ -150,10 +152,10 @@ export default function SettingsPage() {
               color: "var(--text-primary)", outline: "none", cursor: "pointer",
             }}
           >
-            <option value="EUR">€ Euro (EUR)</option>
-            <option value="USD">$ Dollaro (USD)</option>
-            <option value="GBP">£ Sterlina (GBP)</option>
-            <option value="CHF">Fr. Franco (CHF)</option>
+            <option value="EUR">{t("settings.currencyEUR")}</option>
+            <option value="USD">{t("settings.currencyUSD")}</option>
+            <option value="GBP">{t("settings.currencyGBP")}</option>
+            <option value="CHF">{t("settings.currencyCHF")}</option>
           </select>
         </SettingRow>
 
@@ -170,17 +172,17 @@ export default function SettingsPage() {
             }}
           >
             <Save size={14} />
-            {saved ? "Salvato!" : "Salva modifiche"}
+            {saved ? t("common.saved") : t("common.save")}
           </button>
         </div>
       </Section>
 
       {/* ── Finanza ── */}
-      <Section title="Finanza">
+      <Section title={t("settings.finance")}>
         <SettingRow
           icon={Percent}
-          label="Aliquota fiscale prevista"
-          description="La quota tasse verrà sottratta dal Safe to Spend su ogni entrata"
+          label={t("settings.taxRate")}
+          description={t("settings.taxRateNote")}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <input
@@ -228,12 +230,11 @@ export default function SettingsPage() {
         )}
       </Section>
 
-      {/* ── Aspetto ── */}
-      <Section title="Aspetto">
+      <Section title={t("settings.appearance")}>
         <SettingRow
           icon={theme === "dark" ? Sun : Moon}
-          label="Tema interfaccia"
-          description={theme === "dark" ? "Modalità scura attiva" : "Modalità chiara attiva"}
+          label={t("settings.interfaceTheme")}
+          description={theme === "dark" ? t("settings.darkModeActive") : t("settings.lightModeActive")}
         >
           <button
             onClick={toggleTheme}
@@ -244,23 +245,46 @@ export default function SettingsPage() {
               fontSize: 13, fontWeight: 500, cursor: "pointer",
             }}
           >
-            {theme === "dark" ? <><Sun size={14} /> Passa al chiaro</> : <><Moon size={14} /> Passa al scuro</>}
+            {theme === "dark" ? <><Sun size={14} /> {t("common.switchToLight")}</> : <><Moon size={14} /> {t("common.switchToDark")}</>}
           </button>
         </SettingRow>
       </Section>
 
-      {/* ── Sicurezza ── */}
-      <Section title="Sicurezza">
+      {/* ── Lingua ── */}
+      <Section title={t("settings.language")}>
+        <SettingRow
+          icon={Globe}
+          label={t("settings.language")}
+          description={t("settings.languageNote")}
+        >
+          <div style={{ display: "flex", gap: 8 }}>
+            {(["it", "en"] as const).map((loc) => (
+              <button
+                key={loc}
+                onClick={() => setLocale(loc)}
+                style={{
+                  padding: "7px 14px", borderRadius: 8,
+                  border: `1px solid ${locale === loc ? "var(--accent)" : "var(--border)"}`,
+                  background: locale === loc ? "var(--accent-dim)" : "var(--bg-subtle)",
+                  color: locale === loc ? "var(--accent)" : "var(--text-secondary)",
+                  fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
+                }}
+              >
+                {loc === "it" ? "🇮🇹 Italiano" : "🇬🇧 English"}
+              </button>
+            ))}
+          </div>
+        </SettingRow>
+      </Section>
+
+      <Section title={t("settings.security")}>
         <SettingRow
           icon={Shield}
-          label="Cambia password"
-          description="Ti invieremo un'email con il link di reset"
+          label={t("settings.changePassword")}
+          description={t("settings.changePasswordNote")}
         >
           <button
-            onClick={() => {
-              // TODO: supabase.auth.resetPasswordForEmail(email)
-              alert("Email di reset inviata! (stub — collegare a Supabase Auth)");
-            }}
+            onClick={() => { alert(t("settings.resetStub")); }}
             style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "7px 14px", borderRadius: 8, border: "1px solid var(--border)",
@@ -268,15 +292,15 @@ export default function SettingsPage() {
               fontSize: 13, cursor: "pointer",
             }}
           >
-            Invia reset
+            {t("settings.sendReset")}
             <ChevronRight size={13} />
           </button>
         </SettingRow>
 
         <SettingRow
           icon={CreditCard}
-          label="Piano"
-          description="financeRox — Demo gratuito"
+          label={t("settings.plan")}
+          description={t("settings.planNote")}
         >
           <span style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: "var(--accent-purple-dim)", color: "var(--accent-purple)", fontWeight: 600 }}>
             Demo
@@ -284,30 +308,25 @@ export default function SettingsPage() {
         </SettingRow>
       </Section>
 
-      {/* ── Sessione ── */}
-      <Section title="Sessione">
+      <Section title={t("settings.session")}>
         {/* Demo note */}
         <div style={{
           padding: "12px 14px", borderRadius: 10, marginBottom: 4,
           background: "rgba(124,111,247,0.06)", border: "1px solid rgba(124,111,247,0.15)",
           fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.7,
         }}>
-          🔐 <strong style={{ color: "var(--accent-purple)" }}>Auth non ancora configurata.</strong>{" "}
-          La registrazione e il login verranno abilitati collegando Supabase Auth.{" "}
-          Vedi la guida nel{" "}
-          <a href="#" style={{ color: "var(--accent-purple)", textDecoration: "underline" }}>walkthrough</a>.
+          🔐 <strong style={{ color: "var(--accent-purple)" }}>{t("settings.authNoteBold")}</strong>{" "}
+          {t("settings.authNote")}{" "}
+          {t("settings.authWalkthrough")}.
         </div>
 
         <SettingRow
           icon={LogIn}
-          label="Accedi / Registrati"
-          description="Crea un account o accedi con email e password"
+          label={t("settings.loginRegister")}
+          description={t("settings.loginRegisterNote")}
         >
           <button
-            onClick={() => {
-              // TODO: router.push('/login') once auth pages are created
-              alert("Pagine auth in arrivo — vedi implementation_plan.md");
-            }}
+            onClick={() => { alert("Pagine auth in arrivo"); }}
             style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "7px 14px", borderRadius: 8,
@@ -316,14 +335,14 @@ export default function SettingsPage() {
               fontSize: 13, fontWeight: 600, cursor: "pointer",
             }}
           >
-            Login / Registrati
+            {t("settings.loginRegisterBtn")}
           </button>
         </SettingRow>
 
         <SettingRow
           icon={LogOut}
-          label="Esci dall'account"
-          description="Termina la sessione corrente"
+          label={t("settings.logoutLabel")}
+          description={t("settings.logoutNote")}
           danger
         >
           <button
@@ -337,21 +356,20 @@ export default function SettingsPage() {
             }}
           >
             <LogOut size={13} />
-            Esci
+            {t("settings.logoutBtn")}
           </button>
         </SettingRow>
 
         <SettingRow
           icon={Trash2}
-          label="Elimina account"
-          description="Azione irreversibile — tutti i dati verranno cancellati"
+          label={t("settings.deleteAccount")}
+          description={t("settings.deleteAccountNote")}
           danger
         >
           <button
             onClick={() => {
-              if (confirm("Sei sicuro? Questa azione è irreversibile.")) {
-                // TODO: supabase.rpc('delete_user')
-                alert("Funzione non ancora disponibile in demo mode.");
+              if (confirm(t("settings.deleteConfirm"))) {
+                alert(t("settings.deleteStub"));
               }
             }}
             style={{
@@ -361,14 +379,14 @@ export default function SettingsPage() {
               fontSize: 13, cursor: "pointer",
             }}
           >
-            Elimina account
+            {t("settings.deleteAccountBtn")}
           </button>
         </SettingRow>
       </Section>
 
       {/* Version */}
       <div style={{ textAlign: "center", padding: "8px 0 24px", fontSize: 11, color: "var(--text-muted)" }}>
-        financeRox v0.1.0 · Supabase Connected
+        {t("settings.version")}
       </div>
     </div>
   );

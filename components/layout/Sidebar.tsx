@@ -1,26 +1,29 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp,
-  Sparkles, Settings, Sun, Moon, LogOut,
+  Settings, Sun, Moon, LogOut, Globe,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useTheme } from "@/lib/theme-context";
 import { useProfile } from "@/lib/supabase/hooks";
 import { createClient } from "@/lib/supabase/client";
+import { useI18n } from "@/lib/i18n/context";
+import type { TranslationKey } from "@/lib/i18n/translations";
 
-const navItems = [
-  { href: "/dashboard",    label: "Dashboard",   icon: LayoutDashboard },
-  { href: "/transactions", label: "Transazioni",  icon: ArrowLeftRight  },
-  { href: "/goals",        label: "Obiettivi",    icon: Target          },
-  { href: "/future-self",  label: "Future Self",  icon: TrendingUp      },
+const navItems: { href: string; labelKey: TranslationKey; icon: React.ElementType }[] = [
+  { href: "/dashboard",    labelKey: "nav.dashboard",   icon: LayoutDashboard },
+  { href: "/transactions", labelKey: "nav.transactions", icon: ArrowLeftRight  },
+  { href: "/goals",        labelKey: "nav.goals",        icon: Target          },
+  { href: "/future-self",  labelKey: "nav.futureSelf",   icon: TrendingUp      },
 ];
 
 export function Sidebar() {
   const pathname  = usePathname();
   const { theme, toggleTheme } = useTheme();
+  const { t, locale, setLocale } = useI18n();
   const { data: profile } = useProfile();
   const supabase = createClient();
 
@@ -31,7 +34,7 @@ export function Sidebar() {
 
   const capitalize = (str: string) => str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
   const formatName = (name?: string) => {
-    if (!name) return "Utente";
+    if (!name) return t("common.user");
     return name.split(" ").map(capitalize).join(" ");
   };
 
@@ -63,24 +66,21 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div style={{ padding: "4px 10px 22px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 34, height: 34, borderRadius: 10,
-            background: "linear-gradient(135deg, var(--accent), var(--accent-hover))",
-            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-          }}>
-            <Sparkles size={16} color="white" />
-          </div>
-          <div>
-            <div className="gradient-text" style={{ fontWeight: 700, fontSize: 15 }}>financeRox</div>
-            <div style={{ fontSize: 10, color: "var(--text-muted)" }}>Personal Finance</div>
-          </div>
-        </div>
+        <Link href="/dashboard" style={{ textDecoration: "none", display: "block" }}>
+          <Image
+            src={theme === "dark" ? "/financeRox_logoBlack.jpg" : "/financeRox_logo.jpg"}
+            alt="financeRox"
+            width={250}
+            height={68}
+            style={{ objectFit: "contain", maxHeight: 68, width: "auto" }}
+            priority
+          />
+        </Link>
       </div>
 
       {/* Nav */}
       <nav style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1 }}>
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {navItems.map(({ href, labelKey, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
             <Link
@@ -96,7 +96,7 @@ export function Sidebar() {
               }}
             >
               <Icon size={17} style={{ stroke: active ? "var(--accent)" : "var(--text-muted)" }} />
-              {label}
+              {t(labelKey)}
             </Link>
           );
         })}
@@ -121,7 +121,24 @@ export function Sidebar() {
             ? <Sun size={16} style={{ stroke: "var(--accent-amber)" }} />
             : <Moon size={16} style={{ stroke: "var(--accent)" }} />
           }
-          {theme === "dark" ? "Modalità chiara" : "Modalità scura"}
+          {theme === "dark" ? t("common.lightMode") : t("common.darkMode")}
+        </button>
+
+        {/* Language toggle */}
+        <button
+          onClick={() => setLocale(locale === "it" ? "en" : "it")}
+          style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "9px 12px", borderRadius: 10, border: "none", cursor: "pointer",
+            background: "transparent", color: "var(--text-secondary)", fontSize: 13,
+            width: "100%", textAlign: "left",
+            transition: "background 0.15s",
+          }}
+          onMouseOver={e => (e.currentTarget.style.background = "var(--bg-subtle)")}
+          onMouseOut={e => (e.currentTarget.style.background = "transparent")}
+        >
+          <Globe size={16} style={{ stroke: "var(--text-muted)" }} />
+          {locale === "it" ? "Italiano" : "English"}
         </button>
 
         <Link
@@ -133,7 +150,7 @@ export function Sidebar() {
           }}
         >
           <Settings size={15} />
-          Impostazioni
+          {t("nav.settings")}
         </Link>
 
         {/* User avatar */}
@@ -150,12 +167,12 @@ export function Sidebar() {
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {formatName(profile?.full_name)}
             </div>
-            <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>Free Plan</div>
+            <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>{t("common.freePlan")}</div>
           </div>
           <button 
             onClick={handleLogout}
             style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 4 }}
-            title="Esci"
+            title={t("common.logout")}
           >
             <LogOut size={13} />
           </button>

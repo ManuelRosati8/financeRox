@@ -8,6 +8,7 @@ import { MoneyValue } from "@/components/ui/MoneyValue";
 import { GoalDialog } from "@/components/goals/GoalDialog";
 import { SavingsGoal } from "@/lib/types";
 import { differenceInDays, parseISO } from "date-fns";
+import { useI18n } from "@/lib/i18n/context";
 
 function GoalCard({
   goal, onEdit, onDelete,
@@ -16,22 +17,29 @@ function GoalCard({
   onEdit: (g: SavingsGoal) => void;
   onDelete: (id: string) => void;
 }) {
+  const { t, numberLocale } = useI18n();
   const pct = Math.min(100, Math.round((goal.current_amount / goal.target_amount) * 100));
-  const remaining = goal.target_amount - goal.current_amount;
+  const remaining = Math.max(0, goal.target_amount - goal.current_amount);
   const daysLeft  = goal.deadline
     ? differenceInDays(parseISO(goal.deadline), new Date())
     : null;
 
+  // Smart advice: monthly savings needed to hit the goal by the deadline
+  const monthlyNeeded = (daysLeft !== null && daysLeft > 0 && remaining > 0)
+    ? remaining / (daysLeft / 30.44)
+    : null;
+
   return (
     <div
-      className="glass gradient-border fade-up"
+      className="glass fade-up"
       onClick={() => onEdit(goal)}
       style={{ 
         padding: 24, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 16,
-        height: "100%", cursor: "pointer", transition: "transform 0.2s, boxShadow 0.2s"
+        height: "100%", cursor: "pointer", transition: "transform 0.18s, box-shadow 0.18s",
+        border: `1px solid ${goal.color}22`,
       }}
-      onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-      onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}
+      onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.borderColor = `${goal.color}55`; }}
+      onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderColor = `${goal.color}22`; }}
     >
       {/* Icon + Name + Actions */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -42,7 +50,7 @@ function GoalCard({
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 22,
           }}>
-            🎯
+            {goal.icon || "🎯"}
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 700 }}>{goal.name}</div>
@@ -63,7 +71,7 @@ function GoalCard({
               background: "rgba(244,63,94,0.1)", border: "1px solid rgba(244,63,94,0.2)", cursor: "pointer", 
               color: "var(--expense-color)", padding: 6, borderRadius: 8, transition: "all 0.2s", zIndex: 2
             }}
-            title="Elimina"
+            title={t("common.delete")}
             onMouseOver={(e) => e.currentTarget.style.background = "rgba(244,63,94,0.2)"}
             onMouseOut={(e) => e.currentTarget.style.background = "rgba(244,63,94,0.1)"}
           >
@@ -88,12 +96,29 @@ function GoalCard({
           }} />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-          <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600 }}>{pct}% raggiunto</span>
+          <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600 }}>{t("goals.achieved", { pct })}</span>
           <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-            mancano {formatCurrency(remaining)}
+            {t("goals.missing", { amount: formatCurrency(remaining) })}
           </span>
         </div>
       </div>
+
+      {/* Smart advice: monthly savings needed */}
+      {monthlyNeeded !== null && remaining > 0 && (
+        <div style={{
+          padding: "10px 14px", borderRadius: 8,
+          background: monthlyNeeded > 1000 ? "rgba(244,63,94,0.06)" : "rgba(249,115,22,0.06)",
+          border: `1px solid ${monthlyNeeded > 1000 ? "rgba(244,63,94,0.2)" : "rgba(249,115,22,0.18)"}`,
+        }}>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 3 }}>
+            {t("goals.smartAdvice")}
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: monthlyNeeded > 1000 ? "var(--expense-color)" : "var(--accent)" }}>
+            {new Intl.NumberFormat(numberLocale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(monthlyNeeded)}{" "}
+            <span style={{ fontSize: 11, fontWeight: 500, color: "var(--text-secondary)" }}>{t("goals.perMonth")}</span>
+          </div>
+        </div>
+      )}
 
       {/* Deadline */}
       {daysLeft !== null && (
@@ -105,7 +130,7 @@ function GoalCard({
         }}>
           <CalendarClock size={13} color={daysLeft < 30 ? "var(--expense-color)" : "var(--text-muted)"} />
           <span style={{ fontSize: 12, color: daysLeft < 30 ? "var(--expense-color)" : "var(--text-secondary)" }}>
-            {daysLeft > 0 ? `${daysLeft} giorni al traguardo` : "Scaduto"} · {formatDate(goal.deadline!)}
+            {daysLeft > 0 ? t("goals.daysLeft", { n: daysLeft }) : t("goals.expired")} · {formatDate(goal.deadline!)}
           </span>
         </div>
       )}
@@ -116,6 +141,7 @@ function GoalCard({
 export default function GoalsPage() {
   const { data: goals = [], isLoading } = useSavingsGoals();
   const deleteGoal = useDeleteSavingsGoal();
+  const { t } = useI18n();
 
   const [dialogOpen, setDialog] = useState(false);
   const [editing, setEditing]   = useState<SavingsGoal | null>(null);
@@ -125,13 +151,13 @@ export default function GoalsPage() {
   const overallPct     = totalTargeted > 0 ? Math.round((totalSaved / totalTargeted) * 100) : 0;
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Eliminare questo obiettivo?")) return;
+    if (!confirm(t("goals.deleteConfirm"))) return;
     await deleteGoal.mutateAsync(id);
   };
 
   if (isLoading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 400 }}>
-      <div style={{ color: "var(--text-muted)" }}>Caricamento obiettivi...</div>
+      <div style={{ color: "var(--text-muted)" }}>{t("common.loadingGoals")}</div>
     </div>
   );
 
@@ -140,9 +166,9 @@ export default function GoalsPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 700 }}>Piani di Risparmio</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 700 }}>{t("goals.title")}</h1>
           <p style={{ color: "var(--text-secondary)", marginTop: 4 }}>
-            {goals.length} obiettivi · {overallPct}% completato complessivamente
+            {t("goals.subtitle", { count: goals.length, pct: overallPct })}
           </p>
         </div>
         <button
@@ -156,7 +182,7 @@ export default function GoalsPage() {
           }}
         >
           <Plus size={16} />
-          Nuovo Obiettivo
+          {t("goals.addNew")}
         </button>
       </div>
 
@@ -168,15 +194,15 @@ export default function GoalsPage() {
       }}>
         <div style={{ display: "flex", gap: 48 }}>
           <div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Totale Risparmiato</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("goals.totalSaved")}</div>
             <MoneyValue amount={totalSaved} size="2xl" color="var(--income-color)" />
           </div>
           <div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Target Totale</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("goals.totalTarget")}</div>
             <MoneyValue amount={totalTargeted} size="2xl" />
           </div>
           <div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Mancanti</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("goals.remaining")}</div>
             <MoneyValue amount={totalTargeted - totalSaved} size="2xl" color="var(--expense-color)" />
           </div>
         </div>
@@ -184,7 +210,7 @@ export default function GoalsPage() {
           <div className="gradient-text money" style={{ fontSize: 40, fontWeight: 800 }}>
             {overallPct}%
           </div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>completato</div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{t("goals.completedPct", { pct: overallPct })}</div>
         </div>
       </div>
 
@@ -198,7 +224,7 @@ export default function GoalsPage() {
         {goals.length === 0 && (
           <div className="glass" style={{ gridColumn: "span 2", padding: 60, textAlign: "center" }}>
             <Target size={36} color="var(--text-muted)" style={{ margin: "0 auto 16px" }} />
-            <div style={{ color: "var(--text-muted)" }}>Nessun obiettivo ancora. Creane uno!</div>
+            <div style={{ color: "var(--text-muted)" }}>{t("goals.empty")}</div>
           </div>
         )}
       </div>

@@ -9,6 +9,11 @@ export const metadata: Metadata = {
     "Traccia entrate, uscite, obiettivi di risparmio e prevedi il tuo futuro finanziario con financeRox.",
   keywords: "finanza personale, risparmio, budget, investimenti",
   authors: [{ name: "financeRox" }],
+  icons: {
+    icon: [{ url: "/icon.png", type: "image/png" }],
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({

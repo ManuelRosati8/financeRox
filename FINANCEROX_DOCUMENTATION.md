@@ -1,6 +1,7 @@
 # Documentazione Completa - financeRox
 
-> **Versione 2.0** — Ultimo aggiornamento: Marzo 2026  
+> **Versione 2.1** — Ultimo aggiornamento: Giugno 2026  
+> Changelog v2.1: Categorie pill nel form transazioni, strip persuasiva landing page, logo sidebar ingrandito, sezione deploy espansa con Supabase Table Editor e verifica post-deploy.  
 > Changelog v2: Landing Page premium, rimozione paywall Stripe (Testing Mode), Smart Tags, Lifestyle Inflation widget, Pianificatore Tasse, Running Balance Calendario.
 
 Questo documento contiene tutte le istruzioni necessarie per lanciare, testare e deployare (pubblicare) l'applicazione **financeRox**, nonché un prompt dettagliato per rigenerare l'architettura da zero con un'altra Intelligenza Artificiale.
@@ -24,31 +25,88 @@ Supabase gestirà l'autenticazione (login/registrazione) e il database PostgreSQ
 3. Vai in **Authentication > Providers** e assicurati che "Email" sia abilitato (puoi anche configurare Google se lo desideri).
 4. Vai in **SQL Editor** ed esegui il file di seed del database (il contenuto di `supabase/schema.sql`). Questo creerà le tabelle `profiles`, `categories`, `transactions` e `savings_goals`, oltre alle policy di sicurezza RLS (Row Level Security).
 
-### 3. Avvio in Locale (Testing)
-1. Nella cartella principale del progetto, rinomina (o crea) il file `.env.example` in `.env.local`.
-2. Inserisci le tue chiavi Supabase nel file `.env.local`:
+#### 2a. Visualizzare i Dati nel Table Editor
+Dopo che gli utenti si registrano e aggiungono transazioni, puoi vedere i dati in tempo reale:
+1. Vai su **Table Editor** nella sidebar sinistra di Supabase.
+2. Seleziona la tabella che vuoi ispezionare (`transactions`, `profiles`, `savings_goals`, ecc.).
+3. Usa i filtri in alto per filtrare per `user_id` o per data.
+4. **Attenzione RLS**: Il Table Editor del dashboard bypassa le policy RLS — vedi _tutti_ i dati di tutti gli utenti. I tuoi utenti vedono solo i propri dati (grazie alle policy `auth.uid() = user_id` nello schema).
+
+#### 2b. Debug Autenticazione
+- Vai su **Authentication > Users** per vedere tutti gli utenti registrati, lo stato email e i metadati.
+- Puoi inviare un link di reset password manualmente da questa sezione.
+- Per forzare la conferma di un'email (utile in sviluppo), clicca sull'utente → **Send magic link** oppure toglie la verifica email da **Authentication > Settings > Email**.
+
+---
+
+### 3. Variabili d'Ambiente
+Il progetto richiede **due sole variabili** per funzionare sia in locale che in produzione:
+
+| Chiave | Dove si trova | Esempio |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API → Project URL | `https://xxxx.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon public | `eyJhbGciO...` |
+
+**In locale** → file `.env.local` nella root del progetto (mai committare questo file su Git).  
+**In produzione (Vercel)** → Dashboard Vercel → progetto → Settings → Environment Variables.
+
+---
+
+### 4. Avvio in Locale (Testing)
+1. Nella cartella principale del progetto, crea il file `.env.local`:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=il_tuo_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=la_tua_anon_key
    ```
-3. Installa le dipendenze aprendo il terminale nella cartella del progetto:
+2. Installa le dipendenze aprendo il terminale nella cartella del progetto:
    ```bash
    npm install
    ```
-4. Lancia il server di sviluppo:
+3. Lancia il server di sviluppo:
    ```bash
    npm run dev
    ```
-5. Visita `http://localhost:3000` nel tuo browser. L'app dovrebbe funzionare (per ora stiamo usando l'ambiente mockato `lib/mock/data.ts`, quando vorrai usare i dati reali dovrai sovrascrivere `lib/mock/hooks.ts` con vere chiamate Supabase).
+4. Visita `http://localhost:3000` nel tuo browser.
 
-### 4. Deploy su Vercel (Produzione)
-1. Carica il codice del progetto su una repository privata su **GitHub**.
-2. Vai su [Vercel.com](https://vercel.com/) e clicca su **Add New > Project**.
-3. Importa la tua repository GitHub.
-4. **ATTENZIONE**: Nella sezione "Environment Variables" di Vercel, devi incollare le stesse chiavi del tuo `.env.local`:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-5. Clicca su **Deploy**. In circa 2 minuti avrai un URL pubblico (es. `https://financerox.vercel.app`).
+---
+
+### 5. Deploy su Vercel (Produzione)
+1. **Push su GitHub**: Carica la cartella del progetto su una repository (privata consigliata) su GitHub.
+   ```bash
+   git init
+   git add .
+   git commit -m "initial commit"
+   git remote add origin https://github.com/TUO_USERNAME/financeRox.git
+   git push -u origin main
+   ```
+2. **Crea il progetto su Vercel**: Vai su [Vercel.com](https://vercel.com/) → **Add New > Project** → importa la tua repository GitHub.
+3. **Imposta le variabili d'ambiente**: Nella sezione "Environment Variables" di Vercel, aggiungi:
+   - `NEXT_PUBLIC_SUPABASE_URL` = il tuo Project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = la tua anon key
+4. **Configura Supabase per il dominio di produzione**:
+   - In Supabase → **Authentication > URL Configuration** imposta:
+     - **Site URL**: `https://il-tuo-dominio.vercel.app`
+     - **Redirect URLs**: aggiungi `https://il-tuo-dominio.vercel.app/auth/callback`
+   - Senza questo passaggio il login OAuth e le magic link non funzioneranno in produzione.
+5. Clicca **Deploy**. In circa 2 minuti avrai un URL pubblico.
+
+#### 5a. Aggiornamenti successivi
+Ogni `git push` su `main` trigghera automaticamente un re-deploy su Vercel. Non devi fare nulla.
+
+---
+
+### 6. Checklist Post-Deploy
+Dopo il primo deploy, verifica che tutto funzioni:
+
+- [ ] La landing page si carica su `https://tuo-dominio.vercel.app`
+- [ ] Il toggle dark/light funziona nella landing e nell'app
+- [ ] La registrazione con email crea un utente in Supabase (controlla **Authentication > Users**)
+- [ ] Il login reindirizza correttamente alla `/dashboard`
+- [ ] Aggiungere una transazione la salva nel **Table Editor** di Supabase (`transactions`)
+- [ ] La dashboard mostra i valori corretti (entrate/uscite/saldo)
+- [ ] Il calendario in Future Self mostra gli eventi ricorrenti
+- [ ] Su mobile la navbar inferiore è visibile e navigabile
+- [ ] Il logout funziona e reindirizza alla landing
 
 ---
 

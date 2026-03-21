@@ -2,19 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ArrowLeftRight, Target, TrendingUp, Sun, Moon } from "lucide-react";
-import { useTheme } from "@/lib/theme-context";
-
-const navItems = [
-  { href: "/dashboard",    label: "Home",          icon: LayoutDashboard },
-  { href: "/transactions", label: "Transazioni",   icon: ArrowLeftRight  },
-  { href: "/goals",        label: "Obiettivi",     icon: Target          },
-  { href: "/future-self",  label: "Futuro",        icon: TrendingUp      },
-];
+import { LayoutDashboard, ArrowLeftRight, Target, TrendingUp, Globe } from "lucide-react";
+import { useI18n } from "@/lib/i18n/context";
 
 export function MobileNav() {
-  const pathname  = usePathname();
-  const { theme, toggleTheme } = useTheme();
+  const pathname = usePathname();
+  const { t, locale, setLocale } = useI18n();
+
+  const navItems = [
+    { href: "/dashboard",    labelKey: "nav.home" as const,         icon: LayoutDashboard },
+    { href: "/transactions", labelKey: "nav.transactions" as const,  icon: ArrowLeftRight  },
+    { href: "/goals",        labelKey: "nav.goals" as const,         icon: Target          },
+    { href: "/future-self",  labelKey: "nav.future" as const,        icon: TrendingUp      },
+  ];
 
   return (
     <nav
@@ -29,7 +29,7 @@ export function MobileNav() {
         WebkitBackdropFilter: "blur(16px)",
       }}
     >
-      {navItems.map(({ href, label, icon: Icon }) => {
+      {navItems.map(({ href, labelKey, icon: Icon }) => {
         const active = pathname.startsWith(href);
         return (
           <Link
@@ -46,13 +46,13 @@ export function MobileNav() {
             }}
           >
             <Icon size={20} />
-            {label}
+            {t(labelKey)}
           </Link>
         );
       })}
-      {/* Theme toggle as last icon */}
+      {/* Language toggle */}
       <button
-        onClick={toggleTheme}
+        onClick={() => setLocale(locale === "it" ? "en" : "it")}
         style={{
           flex: 1, display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center",
@@ -62,8 +62,8 @@ export function MobileNav() {
           borderTop: "2px solid transparent",
         }}
       >
-        {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-        Tema
+        <Globe size={20} />
+        {locale.toUpperCase()}
       </button>
     </nav>
   );

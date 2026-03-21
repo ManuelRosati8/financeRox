@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, RefreshCw, Tag, Briefcase, TrendingUp, ShoppingBag, Lightbulb } from "lucide-react";
-import { useCategories, useCreateTransaction, useUpdateTransaction } from "@/lib/supabase/hooks";
+import { X, RefreshCw, Tag, Briefcase, TrendingUp, ShoppingBag, Lightbulb, PiggyBank, ChevronDown } from "lucide-react";
+import { useCategories, useCreateTransaction, useUpdateTransaction, useSavingsGoals, useUpdateSavingsGoal } from "@/lib/supabase/hooks";
 import { Transaction, TransactionType, RecurringInterval } from "@/lib/types";
 
 // ── Income type quick-fill presets ───────────────────────────────────────────
@@ -46,8 +46,10 @@ const INTERVALS: { value: RecurringInterval; label: string }[] = [
 export function TransactionDialog({ open, onClose, initialData, initialDate }: Props) {
   const { data: incomeCategories  = [] } = useCategories("income");
   const { data: expenseCategories = [] } = useCategories("expense");
-  const createTx = useCreateTransaction();
-  const updateTx = useUpdateTransaction();
+  const { data: goals = [] } = useSavingsGoals();
+  const createTx   = useCreateTransaction();
+  const updateTx   = useUpdateTransaction();
+  const updateGoal = useUpdateSavingsGoal();
 
   const [type,        setType]        = useState<TransactionType>("expense");
   const [amount,      setAmount]      = useState("");
@@ -60,6 +62,12 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
   const [interval,    setInterval]    = useState<RecurringInterval>("monthly");
   const [status,      setStatus]      = useState<'confirmed' | 'planned'>("confirmed");
   const [loading,     setLoading]     = useState(false);
+
+  // Goal allocation state
+  const [goalAllocEnabled, setGoalAllocEnabled] = useState(false);
+  const [goalAllocId,      setGoalAllocId]      = useState("");
+  const [goalAllocAmount,  setGoalAllocAmount]  = useState("");
+  const [goalAllocPct,     setGoalAllocPct]     = useState("");
 
   const isEdit = !!initialData;
   const categories = type === "income" ? incomeCategories : expenseCategories;
@@ -83,6 +91,8 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
       setCategoryId(""); setRecurring(false); setInterval("monthly");
       setStatus("confirmed");
     }
+    // Reset goal allocation on every open
+    setGoalAllocEnabled(false); setGoalAllocId(""); setGoalAllocAmount(""); setGoalAllocPct("");
   }, [initialData, initialDate, open]);
 
   // Auto-status based on date (only for new transactions)
@@ -102,7 +112,6 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
     const payload = {
       type,
       amount: parseFloat(amount),
-      // Merge tags back into description as #hashtags
       description: appendTags(description, tags),
       date,
       category_id: categoryId || null,
@@ -117,6 +126,40 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
       } else {
         await createTx.mutateAsync(payload);
       }
+
+      // Goal allocation: allocate a portion of this income to the selected goal
+      if (!isEdit && type === "income" && goalAllocEnabled && goalAllocId) {
+        const incomeAmt = parseFloat(amount) || 0;
+        let allocAmt = 0;
+        if (goalAllocPct && parseFloat(goalAllocPct) > 0) {
+          allocAmt = (parseFloat(goalAllocPct) / 100) * incomeAmt;
+        } else if (goalAllocAmount && parseFloat(goalAllocAmount) > 0) {
+          allocAmt = parseFloat(goalAllocAmount);
+        }
+        if (allocAmt > 0) {
+          const targetGoal = goals.find(g => g.id === goalAllocId);
+          if (targetGoal) {
+            // Update goal current amount
+            await updateGoal.mutateAsync({
+              id: goalAllocId,
+              current_amount: targetGoal.current_amount + allocAmt,
+            });
+            // Log a linked saving transfer transaction
+            await createTx.mutateAsync({
+              type: "expense",
+              amount: allocAmt,
+              description: `Versamento ${targetGoal.icon || "🎯"} ${targetGoal.name} #risparmio`,
+              date,
+              category_id: null,
+              is_recurring: false,
+              interval: null,
+              status: "confirmed",
+              recurring_end: null,
+            });
+          }
+        }
+      }
+
       onClose();
     } finally {
       setLoading(false);
@@ -128,15 +171,27 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
       position: "fixed", inset: 0, zIndex: 1000,
       background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)",
       display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "20px 12px",
     }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
         className="glass"
-        style={{ width: 480, maxWidth: "95vw", padding: 28, position: "relative", boxShadow: "var(--shadow-lg)" }}
+        style={{
+          width: 480, maxWidth: "100%",
+          maxHeight: "92vh",
+          display: "flex", flexDirection: "column",
+          position: "relative", boxShadow: "var(--shadow-lg)",
+          overflow: "hidden",
+        }}
       >
-        {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        {/* Sticky header */}
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          padding: "20px 28px 16px",
+          borderBottom: "1px solid var(--border-subtle)",
+          flexShrink: 0,
+        }}>
           <h2 style={{ fontSize: 18, fontWeight: 700 }}>
             {isEdit ? "Modifica Transazione" : "Nuova Transazione"}
           </h2>
@@ -145,6 +200,8 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
           </button>
         </div>
 
+        {/* Scrollable body */}
+        <div style={{ overflowY: "auto", flex: 1, padding: "20px 28px 28px" }}>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           {/* Type toggle */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -183,9 +240,14 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
                       key={label}
                       type="button"
                       onClick={() => {
-                        // Toggle tag and pre-fill description if empty
+                        // Toggle the preset tag; remove other preset tags first
                         setTags(prev => isActive ? prev.filter(t => t !== tag) : [...prev.filter(t => !(INCOME_PRESETS.map(p => p.tag) as string[]).includes(t)), tag]);
                         if (!description) setDescription(label);
+                        // Stipendio → auto-enable monthly recurring
+                        if (label === "Stipendio" && !isActive) {
+                          setRecurring(true);
+                          setInterval("monthly");
+                        }
                       }}
                       style={{
                         display: "flex", flexDirection: "column", alignItems: "center", gap: 5,
@@ -202,6 +264,114 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* ── Goal Allocation (income only, new tx only) ── */}
+          {type === "income" && !isEdit && goals.length > 0 && (
+            <div style={{
+              padding: "14px 16px", borderRadius: 10,
+              background: goalAllocEnabled ? "rgba(249,115,22,0.06)" : "var(--bg-subtle)",
+              border: `1px solid ${goalAllocEnabled ? "var(--accent-border)" : "var(--border-subtle)"}`,
+              transition: "all 0.2s",
+            }}>
+              {/* Toggle header */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <PiggyBank size={15} color={goalAllocEnabled ? "var(--accent)" : "var(--text-muted)"} />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: goalAllocEnabled ? "var(--text-primary)" : "var(--text-secondary)" }}>
+                      Alloca a un obiettivo
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Destina una quota di questa entrata al risparmio</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setGoalAllocEnabled(v => !v)}
+                  style={{
+                    width: 44, height: 24, borderRadius: 99, border: "none", cursor: "pointer",
+                    background: goalAllocEnabled ? "var(--accent)" : "var(--bg-elevated)",
+                    position: "relative", transition: "background 0.2s", flexShrink: 0,
+                  }}
+                >
+                  <span style={{
+                    position: "absolute", top: 3, left: goalAllocEnabled ? 23 : 3,
+                    width: 18, height: 18, borderRadius: "50%",
+                    background: "white", transition: "left 0.2s",
+                  }} />
+                </button>
+              </div>
+
+              {goalAllocEnabled && (
+                <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+                  {/* Goal selector */}
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>Obiettivo</div>
+                    <div style={{ position: "relative" }}>
+                      <select
+                        value={goalAllocId}
+                        onChange={e => setGoalAllocId(e.target.value)}
+                        className="rox-select"
+                        style={{ width: "100%", padding: "9px 36px 9px 12px", appearance: "none" as const }}
+                      >
+                        <option value="">Scegli obiettivo...</option>
+                        {goals.map(g => (
+                          <option key={g.id} value={g.id}>
+                            {g.icon || "🎯"} {g.name} — {new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(g.current_amount)} / {new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(g.target_amount)}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown size={14} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", pointerEvents: "none" }} />
+                    </div>
+                  </div>
+
+                  {/* Amount or percentage */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <label>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 4 }}>Importo fisso (€)</div>
+                      <input
+                        type="number" step="0.01" min="0"
+                        value={goalAllocAmount}
+                        onChange={e => { setGoalAllocAmount(e.target.value); setGoalAllocPct(""); }}
+                        onFocus={() => setGoalAllocPct("")}
+                        placeholder="es. 200"
+                        className="rox-input"
+                        style={{ width: "100%", padding: "8px 12px", fontFamily: "JetBrains Mono, monospace" }}
+                      />
+                    </label>
+                    <label>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 4 }}>Oppure % dell&apos;entrata</div>
+                      <input
+                        type="number" step="1" min="0" max="100"
+                        value={goalAllocPct}
+                        onChange={e => { setGoalAllocPct(e.target.value); setGoalAllocAmount(""); }}
+                        onFocus={() => setGoalAllocAmount("")}
+                        placeholder="es. 10"
+                        className="rox-input"
+                        style={{ width: "100%", padding: "8px 12px", fontFamily: "JetBrains Mono, monospace" }}
+                      />
+                    </label>
+                  </div>
+
+                  {/* Preview */}
+                  {goalAllocId && (goalAllocAmount || goalAllocPct) && (() => {
+                    const inc = parseFloat(amount) || 0;
+                    const alloc = goalAllocPct
+                      ? (parseFloat(goalAllocPct) / 100) * inc
+                      : parseFloat(goalAllocAmount) || 0;
+                    const g = goals.find(g => g.id === goalAllocId);
+                    return alloc > 0 && g ? (
+                      <div style={{ fontSize: 12, color: "var(--accent)", padding: "8px 10px", borderRadius: 7, background: "var(--accent-dim)" }}>
+                        ✅ {new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(alloc)} saranno aggiunti a{" "}
+                        <strong>{g.icon} {g.name}</strong>
+                        {" "}→ nuovo totale:{" "}
+                        <strong>{new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(g.current_amount + alloc)}</strong>
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+              )}
             </div>
           )}
 
@@ -297,37 +467,58 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
             </div>
           </div>
 
-          {/* Date + Category */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <label>
-              <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>Data</div>
-              <input
-                type="date" required
-                value={date} onChange={(e) => setDate(e.target.value)}
+          {/* Date */}
+          <label>
+            <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>Data</div>
+            <input
+              type="date" required
+              value={date} onChange={(e) => setDate(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 14px",
+                background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)",
+                borderRadius: 8, color: "var(--text-primary)", fontSize: 13,
+                colorScheme: "dark", outline: "none",
+              }}
+            />
+          </label>
+
+          {/* Category pills */}
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 8 }}>Categoria</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <button
+                type="button"
+                onClick={() => setCategoryId("")}
                 style={{
-                  width: "100%", padding: "10px 14px",
-                  background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)",
-                  borderRadius: 8, color: "var(--text-primary)", fontSize: 13,
-                  colorScheme: "dark", outline: "none",
-                }}
-              />
-            </label>
-            <label>
-              <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>Categoria</div>
-              <select
-                value={categoryId} onChange={(e) => setCategoryId(e.target.value)}
-                style={{
-                  width: "100%", padding: "10px 14px",
-                  background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)",
-                  borderRadius: 8, color: "var(--text-primary)", fontSize: 13, outline: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "6px 12px", borderRadius: 99,
+                  border: `1px solid ${categoryId === "" ? "var(--border)" : "var(--border-subtle)"}`,
+                  cursor: "pointer", fontSize: 12, fontWeight: 500, transition: "all 0.12s",
+                  background: categoryId === "" ? "var(--bg-elevated)" : "var(--bg-subtle)",
+                  color: categoryId === "" ? "var(--text-primary)" : "var(--text-secondary)",
                 }}
               >
-                <option value="">Nessuna</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </label>
+                Nessuna
+              </button>
+              {categories.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setCategoryId(c.id)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "6px 12px", borderRadius: 99,
+                    border: `1px solid ${categoryId === c.id ? c.color : "var(--border-subtle)"}`,
+                    cursor: "pointer", fontSize: 12, fontWeight: 500, transition: "all 0.12s",
+                    background: categoryId === c.id ? `${c.color}22` : "var(--bg-subtle)",
+                    color: categoryId === c.id ? c.color : "var(--text-secondary)",
+                  }}
+                >
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
+                  {c.name}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Status Selection */}
@@ -412,6 +603,7 @@ export function TransactionDialog({ open, onClose, initialData, initialDate }: P
             {loading ? "Salvataggio..." : isEdit ? "Salva Modifiche" : "Aggiungi Transazione"}
           </button>
         </form>
+        </div>{/* end scrollable body */}
       </div>
     </div>
   );

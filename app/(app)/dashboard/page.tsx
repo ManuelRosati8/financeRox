@@ -11,17 +11,19 @@ import { SpendingDonut } from "@/components/charts/SpendingDonut";
 import { MonthlyBarChart } from "@/components/charts/MonthlyBarChart";
 import { MoneyValue } from "@/components/ui/MoneyValue";
 import { AdjustBalanceDialog } from "@/components/dashboard/AdjustBalanceDialog";
-import { LifestyleInflationWidget } from "@/components/dashboard/LifestyleInflationWidget";
 import { RoxInsightWidget } from "@/components/dashboard/RoxInsightWidget";
+import { useI18n } from "@/lib/i18n/context";
+import type { TranslationKey } from "@/lib/i18n/translations";
 
 function KpiCard({
-  label, value, subtitle, icon: Icon, color, trend, delay = 0, href, hint, onValueClick
+  label, value, subtitle, icon: Icon, color, trend, delay = 0, href, hint, onValueClick, isPercent
 }: {
   label: string; value: number; subtitle: string;
   icon: React.ElementType; color: string; trend?: "up" | "down" | "neutral";
-  delay?: number; href?: string; hint?: string; onValueClick?: () => void;
+  delay?: number; href?: string; hint?: string; onValueClick?: () => void; isPercent?: boolean;
 }) {
-  const isPercent = label === "Tasso di Risparmio";
+  const { t } = useI18n();
+  const isPercentDisplay = !!isPercent;
   const content = (
     <div
       className="glass card-hover fade-up shimmer-card"
@@ -41,7 +43,7 @@ function KpiCard({
         </div>
       </div>
       <div>
-        {isPercent ? (
+        {isPercentDisplay ? (
           <div className="money" style={{ fontSize: 26, fontWeight: 700, color: trend === "up" ? "var(--income-color)" : "var(--text-primary)" }}>
             {value}%
           </div>
@@ -61,7 +63,7 @@ function KpiCard({
             }}
             onMouseOver={e => onValueClick && (e.currentTarget.style.transform = "scale(1.02)")}
             onMouseOut={e => onValueClick && (e.currentTarget.style.transform = "scale(1)")}
-            title={onValueClick ? "Clicca per modificare questo saldo" : ""}
+            title={onValueClick ? t("dashboard.clickToEdit") : ""}
           >
             <MoneyValue amount={value} size="2xl"
               color={trend === "down" ? "var(--expense-color)" : trend === "up" ? "var(--income-color)" : "var(--text-primary)"}
@@ -90,6 +92,7 @@ export default function DashboardPage() {
   const { data: goals = [] } = useSavingsGoals();
   const { data: profile } = useProfile();
   const { data: categories = [] } = useCategories();
+  const { t, numberLocale } = useI18n();
 
   const [adjustState, setAdjustState] = useState<{ open: boolean; type: "balance" | "income"; currentValue: number; label: string }>({
     open: false, type: "balance", currentValue: 0, label: ""
@@ -168,19 +171,28 @@ export default function DashboardPage() {
 
   if (isLoading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-      <div style={{ color: "var(--text-muted)" }}>Caricamento...</div>
+      <div style={{ color: "var(--text-muted)" }}>{t("common.loading")}</div>
     </div>
   );
+
+  const hour = new Date().getHours();
+  const greetingKey: TranslationKey =
+    hour >= 6 && hour < 12 ? "dashboard.greetingMorning" :
+    hour >= 12 && hour < 17 ? "dashboard.greetingAfternoon" :
+    hour >= 17 && hour < 22 ? "dashboard.greetingEvening" :
+    "dashboard.greetingNight";
+  const greeting = t(greetingKey);
+  const guestLabel = t("dashboard.guest");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div className="fade-up">
         <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)" }}>
-          Buonasera, {profile?.full_name ? (profile.full_name.split(" ")[0].charAt(0).toUpperCase() + profile.full_name.split(" ")[0].slice(1).toLowerCase()) : "Ospite"} 👋
+          {greeting}, {profile?.full_name ? (profile.full_name.split(" ")[0].charAt(0).toUpperCase() + profile.full_name.split(" ")[0].slice(1).toLowerCase()) : guestLabel} 👋
         </h1>
         <p style={{ color: "var(--text-secondary)", marginTop: 4, fontSize: 13 }}>
-          Riepilogo del tuo patrimonio personale
+          {t("dashboard.subtitle")}
         </p>
       </div>
 
@@ -194,16 +206,16 @@ export default function DashboardPage() {
       }}>
         <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
         <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.7, flex: 1 }}>
-          <strong style={{ color: "var(--text-primary)" }}>Dove modifico i dati?</strong>
+          <strong style={{ color: "var(--text-primary)" }}>{t("dashboard.whereEdit")}</strong>
           {" — "}
-          Entrate e uscite:{" "}
-          <Link href="/transactions" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>sezione Transazioni</Link>
+          {t("dashboard.whereEditIncome")}{" "}
+          <Link href="/transactions" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>{t("dashboard.whereEditSep1")}</Link>
           {" · "}
-          Obiettivi di risparmio:{" "}
-          <Link href="/goals" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>sezione Obiettivi</Link>
+          {t("dashboard.whereEditGoals")}{" "}
+          <Link href="/goals" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>{t("dashboard.whereEditSep2")}</Link>
           {" · "}
-          clicca le card qui sotto oppure usa il{" "}
-          <strong style={{ color: "var(--accent)" }}>+ in basso a destra</strong>.
+          {t("dashboard.whereEditOr")}{" "}
+          <strong style={{ color: "var(--accent)" }}>{t("dashboard.whereEditFab")}</strong>.
         </div>
         <Link href="/transactions"
           style={{
@@ -212,7 +224,7 @@ export default function DashboardPage() {
             flexShrink: 0, whiteSpace: "nowrap",
           }}
         >
-          + Nuova Transazione
+          {t("common.newTransaction")}
         </Link>
       </div>
 
@@ -231,14 +243,14 @@ export default function DashboardPage() {
           </div>
           <div>
             <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Denaro Libero (Safe to Spend)
+              {t("dashboard.safeToSpend")}
             </h2>
             <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>
-              Saldo al netto di {new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(stats.upcomingExpenses)} spese fisse
+              {new Intl.NumberFormat(numberLocale,{style:"currency",currency:"EUR"}).format(stats.upcomingExpenses)}{" "}{t("dashboard.safeToSpendSuffix")}
               {stats.taxAccrual > 0 && (
                 <> — e <strong style={{ color: "var(--accent)" }}>
-                  {new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(stats.taxAccrual)}
-                </strong> accantonati per tasse ({taxRate}%)
+                  {new Intl.NumberFormat(numberLocale,{style:"currency",currency:"EUR"}).format(stats.taxAccrual)}
+                </strong>{" "}{t("dashboard.taxSetAside")} ({taxRate}%)
                 </>
               )}
             </p>
@@ -252,37 +264,37 @@ export default function DashboardPage() {
       {/* KPI grid — 4-col desktop, 2-col tablet/mobile */}
       <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
         <KpiCard
-          label="Saldo Totale"
+          label={t("dashboard.totalBalance")}
           value={stats.balance}
-          subtitle="Disponibilità attuale"
+          subtitle={t("dashboard.currentAvailability")}
           icon={Wallet}
           color="var(--accent)"
           delay={0.15}
           href="/transactions"
-          hint="Vai a Transazioni"
-          onValueClick={() => setAdjustState({ open: true, type: "balance", currentValue: stats.balance, label: "Saldo Totale" })}
+          hint={t("dashboard.goToTransactions")}
+          onValueClick={() => setAdjustState({ open: true, type: "balance", currentValue: stats.balance, label: t("dashboard.totalBalance") })}
         />
         <KpiCard
-          label="Entrate Mese"
+          label={t("dashboard.monthlyIncome")}
           value={stats.income}
           trend="up"
-          subtitle="Mensilità corrente"
+          subtitle={t("dashboard.currentMonth")}
           icon={TrendingUp}
           color="var(--income-color)"
           delay={0.2}
           href="/transactions"
-          hint="Aggiungi / modifica entrate"
-          onValueClick={() => setAdjustState({ open: true, type: "income", currentValue: stats.income, label: "Entrate Mese" })}
+          hint={t("dashboard.addEditIncome")}
+          onValueClick={() => setAdjustState({ open: true, type: "income", currentValue: stats.income, label: t("dashboard.monthlyIncome") })}
         />
         <KpiCard
-          label="Uscite Mese" value={stats.expenses} subtitle="questo mese"
+          label={t("dashboard.monthlyExpenses")} value={stats.expenses} subtitle={t("dashboard.thisMonth")}
           icon={TrendingDown} color="#f43f5e" trend="down" delay={0.12}
-          href="/transactions" hint="Aggiungi / modifica uscite"
+          href="/transactions" hint={t("dashboard.addEditExpenses")}
         />
         <KpiCard
-          label="Tasso di Risparmio" value={stats.savingsRate} subtitle="% su entrate mensili"
+          label={t("dashboard.savingsRate")} value={stats.savingsRate} subtitle={t("dashboard.ofMonthlyIncome")}
           icon={PiggyBank} color="#f59e0b" trend="up" delay={0.18}
-          href="/goals" hint="Gestisci gli obiettivi"
+          href="/goals" hint={t("dashboard.manageGoals")} isPercent
         />
       </div>
 
@@ -296,17 +308,17 @@ export default function DashboardPage() {
           <div className="glass fade-up" style={{ padding: 22, animationDelay: "0.1s" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div>
-                <h2 style={{ fontSize: 15, fontWeight: 600 }}>Entrate vs Uscite</h2>
+                <h2 style={{ fontSize: 15, fontWeight: 600 }}>{t("dashboard.incomeVsExpenses")}</h2>
                 <div style={{ display: "flex", gap: 16, marginTop: 6 }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--text-muted)" }}>
-                    <span style={{ width: 8, height: 8, borderRadius: 2, background: "#10b981" }} /> Entrate
+                    <span style={{ width: 8, height: 8, borderRadius: 2, background: "#10b981" }} /> {t("dashboard.incomeLabel")}
                   </span>
                   <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--text-muted)" }}>
-                    <span style={{ width: 8, height: 8, borderRadius: 2, background: "#f43f5e" }} /> Uscite
+                    <span style={{ width: 8, height: 8, borderRadius: 2, background: "#f43f5e" }} /> {t("dashboard.expenseLabel")}
                   </span>
                 </div>
               </div>
-              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>ultimi 6 mesi</span>
+              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{t("dashboard.last6Months")}</span>
             </div>
             <MonthlyBarChart transactions={transactions} />
           </div>
@@ -314,9 +326,9 @@ export default function DashboardPage() {
           {/* Recent transactions */}
           <div className="glass fade-up" style={{ padding: 22, animationDelay: "0.15s" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600 }}>Ultime Transazioni</h2>
+              <h2 style={{ fontSize: 15, fontWeight: 600 }}>{t("dashboard.recentTransactions")}</h2>
               <Link href="/transactions" style={{ fontSize: 12, color: "var(--accent)", textDecoration: "none" }}>
-                Vedi e modifica tutte →
+                {t("dashboard.viewAll")}
               </Link>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -368,23 +380,33 @@ export default function DashboardPage() {
         {/* Right column: donut + goals */}
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <div className="glass fade-up" style={{ padding: 22, animationDelay: "0.1s" }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 18 }}>Spese per Categoria</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 600 }}>{t("dashboard.spendingByCategory")}</h2>
+              <Link href="/transactions" style={{ fontSize: 11, color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}>
+                {t("dashboard.details")}
+              </Link>
+            </div>
+            {categorySpending.length > 0 && (
+              <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 14 }}>
+                {t("dashboard.totalLabel")} <span style={{ fontFamily: "JetBrains Mono, monospace", fontWeight: 600, color: "var(--text-secondary)" }}>
+                  {new Intl.NumberFormat(numberLocale, { style: "currency", currency: "EUR" }).format(
+                    categorySpending.reduce((s, c) => s + c.value, 0)
+                  )}
+                </span> — {t("dashboard.topCategories", { n: categorySpending.length })}
+              </div>
+            )}
             <SpendingDonut data={categorySpending} />
           </div>
 
           <div className="fade-up" style={{ animationDelay: "0.25s" }}>
-            <LifestyleInflationWidget transactions={transactions} />
-          </div>
-
-          <div className="fade-up" style={{ animationDelay: "0.32s" }}>
             <RoxInsightWidget transactions={transactions} categories={categories} />
           </div>
 
           <div className="glass fade-up" style={{ padding: 22, animationDelay: "0.2s" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600 }}>Obiettivi</h2>
+              <h2 style={{ fontSize: 15, fontWeight: 600 }}>{t("dashboard.goalsTitle")}</h2>
               <Link href="/goals" style={{ fontSize: 12, color: "var(--accent)", textDecoration: "none" }}>
-                Modifica →
+                {t("dashboard.editGoals")}
               </Link>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>

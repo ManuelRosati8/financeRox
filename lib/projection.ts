@@ -113,18 +113,19 @@ export function computeProjection(
 }
 
 /**
- * Compute milestone snapshots for 6, 12, 24 months.
+ * Compute milestone snapshots for 6, 12, 24, 36 months.
  */
 export function computeMilestones(
   transactions: Transaction[],
   goals: SavingsGoal[],
   whatIf?: WhatIfScenario
 ): { months: number; balance: number; whatIfBalance?: number }[] {
-  const full = computeProjection(transactions, goals, 24, whatIf);
+  const full = computeProjection(transactions, goals, 36, whatIf);
   return [
     { months: 6,  ...extractPoint(full, 6,  whatIf) },
     { months: 12, ...extractPoint(full, 12, whatIf) },
     { months: 24, ...extractPoint(full, 24, whatIf) },
+    { months: 36, ...extractPoint(full, 36, whatIf) },
   ];
 }
 

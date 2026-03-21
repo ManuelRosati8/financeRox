@@ -105,19 +105,40 @@ export function SpendingDonut({ data }: Props) {
         </div>
       </div>
 
-      {/* Legend rows */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-        {data.map((d) => (
-          <div key={d.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: d.color, flexShrink: 0 }} />
-              <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{d.name}</span>
+      {/* Legend rows with progress bars */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {data.map((d) => {
+          const pct = total > 0 ? (d.value / total) * 100 : 0;
+          return (
+            <div key={d.name}>
+              {/* Name + amount row */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <span style={{ width: 9, height: 9, borderRadius: 3, background: d.color, flexShrink: 0, display: "inline-block" }} />
+                  <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-primary)" }}>{d.name}</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "JetBrains Mono, monospace" }}>
+                    {pct.toFixed(0)}%
+                  </span>
+                  <span style={{ fontSize: 12, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", fontWeight: 600, minWidth: 72, textAlign: "right" }}>
+                    {formatCurrency(d.value)}
+                  </span>
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div style={{ height: 4, borderRadius: 99, background: "var(--bg-subtle)", overflow: "hidden" }}>
+                <div style={{
+                  height: "100%",
+                  width: `${pct}%`,
+                  borderRadius: 99,
+                  background: d.color,
+                  transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)",
+                }} />
+              </div>
             </div>
-            <span style={{ fontSize: 12, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", fontWeight: 500 }}>
-              {formatCurrency(d.value)}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -7,11 +7,13 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { MoneyValue } from "@/components/ui/MoneyValue";
 import { TransactionDialog } from "@/components/transactions/TransactionDialog";
 import { Transaction } from "@/lib/types";
+import { useI18n } from "@/lib/i18n/context";
 
 export default function TransactionsPage() {
   const { data: transactions = [], isLoading } = useTransactions();
   const { data: categories = [] } = useCategories();
   const deleteTx = useDeleteTransaction();
+  const { t } = useI18n();
 
   const [search, setSearch]       = useState("");
   const [typeFilter, setType]     = useState<"all" | "income" | "expense">("all");
@@ -67,7 +69,7 @@ export default function TransactionsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Eliminare questa transazione?")) return;
+    if (!confirm(t("transactions.deleteConfirm"))) return;
     setDeleting(id);
     await deleteTx.mutateAsync(id);
     setDeleting(null);
@@ -75,7 +77,7 @@ export default function TransactionsPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (!confirm(`Eliminare ${selectedIds.size} transazioni selezionate?`)) return;
+    if (!confirm(t("transactions.deleteBulkConfirm", { count: selectedIds.size }))) return;
     setBulkDeleting(true);
     await Promise.all(Array.from(selectedIds).map(id => deleteTx.mutateAsync(id)));
     setBulkDeleting(false);
@@ -99,7 +101,7 @@ export default function TransactionsPage() {
 
   if (isLoading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 400 }}>
-      <div style={{ color: "var(--text-muted)" }}>Caricamento transazioni...</div>
+      <div style={{ color: "var(--text-muted)" }}>{t("common.loadingTransactions")}</div>
     </div>
   );
 
@@ -108,9 +110,9 @@ export default function TransactionsPage() {
       {/* Header */}
       <div className="header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 700 }}>Transazioni</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 700 }}>{t("transactions.title")}</h1>
           <p style={{ color: "var(--text-secondary)", marginTop: 4 }}>
-            {transactions.length} transazioni totali
+            {t("transactions.total", { n: transactions.length })}
           </p>
         </div>
         <button
@@ -127,7 +129,7 @@ export default function TransactionsPage() {
           onMouseOut={e => (e.currentTarget.style.transform = "translateY(0)")}
         >
           <Plus size={16} />
-          Nuova Transazione
+          {t("transactions.addNew")}
         </button>
       </div>
 
@@ -138,7 +140,7 @@ export default function TransactionsPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cerca transazione..."
+            placeholder={t("transactions.search")}
             style={{
               width: "100%", paddingLeft: 36, paddingRight: 12, paddingTop: 8, paddingBottom: 8,
               background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)",
@@ -156,9 +158,9 @@ export default function TransactionsPage() {
             color: "var(--text-primary)", fontSize: 13, cursor: "pointer", outline: "none",
           }}
         >
-          <option value="all">Tutti i tipi</option>
-          <option value="income">Entrate</option>
-          <option value="expense">Uscite</option>
+          <option value="all">{t("transactions.allTypes")}</option>
+          <option value="income">{t("transactions.income")}</option>
+          <option value="expense">{t("transactions.expense")}</option>
         </select>
 
         <select
@@ -170,7 +172,7 @@ export default function TransactionsPage() {
             color: "var(--text-primary)", fontSize: 13, cursor: "pointer", outline: "none",
           }}
         >
-          <option value="all">Tutte le categorie</option>
+          <option value="all">{t("transactions.allCategories")}</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
@@ -178,7 +180,7 @@ export default function TransactionsPage() {
 
         <div style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
           <Filter size={13} style={{ display: "inline", marginRight: 4 }} />
-          {filtered.length} risultati
+          {filtered.length} {t("transactions.results")}
         </div>
 
         {/* Tag filter */}
@@ -210,11 +212,11 @@ export default function TransactionsPage() {
                   </button>
                 </th>
                 {[
-                  { label: "Data", key: "date" },
-                  { label: "Descrizione", key: "description" },
-                  { label: "Categoria", key: "category" },
-                  { label: "Tipo", key: "type" },
-                  { label: "Importo", key: "amount" }
+                  { label: t("transactions.date"), key: "date" },
+                  { label: t("transactions.description"), key: "description" },
+                  { label: t("transactions.category"), key: "category" },
+                  { label: t("transactions.type"), key: "type" },
+                  { label: t("transactions.amount"), key: "amount" }
                 ].map((col) => (
                   <th 
                     key={col.key} 
@@ -297,13 +299,13 @@ export default function TransactionsPage() {
                       <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
                         <RefreshCw size={10} color="var(--accent-purple)" />
                         <span style={{ fontSize: 11, color: "var(--accent-purple)" }}>
-                          ricorrente · {tx.interval}
+                          {t("transactions.recurring")} · {tx.interval}
                         </span>
                       </div>
                     )}
                     {tx.status === 'planned' && (
                       <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2, display: "flex", alignItems: "center", gap: 3 }}>
-                        <CheckSquare size={10} /> Pianificata
+                        <CheckSquare size={10} /> {t("transactions.planned")}
                       </div>
                     )}
                   </td>
@@ -329,7 +331,7 @@ export default function TransactionsPage() {
                         : { background: "rgba(244,63,94,0.12)", color: "var(--expense-color)" }),
                     }}>
                       {tx.type === "income" ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-                      {tx.type === "income" ? "Entrata" : "Uscita"}
+                      {tx.type === "income" ? t("transactions.incomeLabel") : t("transactions.expenseLabel")}
                     </span>
                   </td>
                   <td style={{ padding: "14px 16px", textAlign: "right" }}>
@@ -361,7 +363,7 @@ export default function TransactionsPage() {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>
-                    Nessuna transazione trovata
+                    {t("transactions.noResults")}
                   </td>
                 </tr>
               )}
@@ -370,13 +372,8 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {/* Mobile card list — shown only on small screens */}
+      {/* Cards — mobile */}
       <div className="tx-cards-mobile">
-        {filtered.length === 0 && (
-          <div style={{ padding: 32, textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
-            Nessuna transazione trovata
-          </div>
-        )}
         {filtered.map((tx) => {
           const category = categories.find(c => c.id === tx.category_id);
           const tagMatches = tx.description.match(/#[\w\u00C0-\u017F]+/g);
@@ -451,14 +448,14 @@ export default function TransactionsPage() {
           display: "flex", alignItems: "center", gap: 24, zIndex: 100,
         }}>
           <span style={{ fontSize: 13, fontWeight: 600 }}>
-            {selectedIds.size} selezionate
+            {t("transactions.selected", { count: selectedIds.size })}
           </span>
           <div style={{ display: "flex", gap: 12 }}>
             <button
               onClick={() => setSelectedIds(new Set())}
               style={{ background: "transparent", border: "none", color: "var(--text-secondary)", fontSize: 13, fontWeight: 500, cursor: "pointer" }}
             >
-              Annulla
+              {t("transactions.cancelSelection")}
             </button>
             <button
               onClick={handleBulkDelete}
@@ -470,7 +467,7 @@ export default function TransactionsPage() {
               }}
             >
               <Trash2 size={14} />
-              {bulkDeleting ? "Eliminando..." : "Elimina"}
+              {bulkDeleting ? t("transactions.deleting") : t("transactions.deleteSelected")}
             </button>
           </div>
         </div>

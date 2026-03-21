@@ -104,7 +104,7 @@ export default function FutureSelfPage() {
   const { data: transactions = [] } = useTransactions();
   const { data: goals = [] }        = useSavingsGoals();
 
-  const [months, setMonths] = useState<6 | 12 | 24>(6);
+  const [months, setMonths] = useState<6 | 12 | 24 | 36>(6);
   
   const [whatIfActive,   setWhatIfActive]   = useState(false);
   const [whatIfAmount,   setWhatIfAmount]   = useState("");
@@ -218,8 +218,8 @@ export default function FutureSelfPage() {
         )}
       </div>
 
-      {/* Milestone cards */}
-      <div className="milestone-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+      {/* Milestone cards — 4 col */}
+      <div className="milestone-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
         {milestones.map(({ months, balance, whatIfBalance }) => (
           <MilestoneCard
             key={months}
@@ -232,12 +232,12 @@ export default function FutureSelfPage() {
 
       {/* Controls */}
       <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-        {[6, 12, 24].map((m) => {
+        {([6, 12, 24, 36] as const).map((m) => {
           const isProFeature = m > 6;
           return (
             <button
               key={m}
-              onClick={() => setMonths(m as 6 | 12 | 24)}
+              onClick={() => setMonths(m)}
               style={{
                 padding: "8px 16px", borderRadius: 20, border: "1px solid", cursor: "pointer",
                 fontSize: 13, fontWeight: 600, transition: "all 0.15s",
@@ -361,6 +361,35 @@ export default function FutureSelfPage() {
 
             {whatIfActive && (
               <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+
+                {/* Quick preset scenarios */}
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Scenari rapidi</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {([
+                      { label: "🏠 Mutuo 800€/mese",    type: "expense" as const, amount: "800",  interval: "monthly"  as const, desc: "Mutuo casa" },
+                      { label: "🚗 Rata auto 300€/mese", type: "expense" as const, amount: "300",  interval: "monthly"  as const, desc: "Rata auto" },
+                      { label: "💹 Investimento 200€",   type: "expense" as const, amount: "200",  interval: "monthly"  as const, desc: "Investimento mensile" },
+                      { label: "📱 Abbonamento 15€",     type: "expense" as const, amount: "15",   interval: "monthly"  as const, desc: "Nuovo abbonamento" },
+                      { label: "💰 Entrata extra 500€",  type: "income"  as const, amount: "500",  interval: "monthly"  as const, desc: "Entrata extra" },
+                      { label: "🎁 Bonus annuale 1000€", type: "income"  as const, amount: "1000", interval: "yearly"   as const, desc: "Bonus annuale" },
+                    ]).map(preset => (
+                      <button key={preset.label} type="button"
+                        onClick={() => { setWhatIfType(preset.type); setWhatIfAmount(preset.amount); setWhatIfInterval(preset.interval); setWhatIfDesc(preset.desc); }}
+                        style={{
+                          padding: "5px 10px", borderRadius: 8, border: "1px solid", cursor: "pointer",
+                          fontSize: 11, fontWeight: 500, transition: "all 0.12s",
+                          background: "var(--bg-subtle)",
+                          borderColor: whatIfAmount === preset.amount && whatIfDesc === preset.desc ? "#f59e0b" : "var(--border-subtle)",
+                          color: whatIfAmount === preset.amount && whatIfDesc === preset.desc ? "#f59e0b" : "var(--text-secondary)",
+                        }}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Type toggle */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                   {(["expense", "income"] as const).map((t) => (
@@ -390,14 +419,17 @@ export default function FutureSelfPage() {
                   {/* Interval */}
                   <label>
                     <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>Frequenza</div>
-                    <select value={whatIfInterval} onChange={(e) => setWhatIfInterval(e.target.value as RecurringInterval)}
-                      style={{ width: "100%", padding: "10px 14px", background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)", borderRadius: 8, color: "var(--text-primary)", fontSize: 13, outline: "none", cursor: "pointer" }}
-                    >
-                      <option value="monthly">ogni mese</option>
-                      <option value="yearly">ogni anno</option>
-                      <option value="weekly">ogni settimana</option>
-                      <option value="daily">ogni giorno</option>
-                    </select>
+                    <div style={{ position: "relative" }}>
+                      <select value={whatIfInterval} onChange={(e) => setWhatIfInterval(e.target.value as RecurringInterval)}
+                        className="rox-select"
+                        style={{ width: "100%", padding: "10px 32px 10px 14px" }}
+                      >
+                        <option value="monthly">ogni mese</option>
+                        <option value="yearly">ogni anno</option>
+                        <option value="weekly">ogni settimana</option>
+                        <option value="daily">ogni giorno</option>
+                      </select>
+                    </div>
                   </label>
                   {/* Description */}
                   <label>
@@ -410,30 +442,47 @@ export default function FutureSelfPage() {
                   </label>
                 </div>
 
-                {whatIfAmount && parseFloat(whatIfAmount) > 0 && (
-                  <div style={{
-                    padding: "14px 18px", borderRadius: 10,
-                    background: whatIfType === "expense" ? "rgba(244,63,94,0.08)" : "rgba(16,185,129,0.08)",
-                    border: `1px solid ${whatIfType === "expense" ? "rgba(244,63,94,0.2)" : "rgba(16,185,129,0.2)"}`,
-                    fontSize: 13,
-                  }}>
-                    <strong style={{ color: whatIfType === "expense" ? "var(--expense-color)" : "var(--income-color)" }}>
-                      {whatIfType === "expense" ? "⚠️ Impatto negativo" : "🚀 Impatto positivo"}:&nbsp;
-                    </strong>
-                    <span style={{ color: "var(--text-secondary)" }}>
-                      Aggiungere{" "}
-                      <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)" }}>
-                        {new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(parseFloat(whatIfAmount))} {whatIfInterval === "monthly" ? "al mese" : whatIfInterval}
-                      </span>{" "}
-                      cambierà il tuo patrimonio a {months} mesi di{" "}
-                      <span style={{ fontFamily: "JetBrains Mono, monospace", fontWeight: 600, color: whatIfType === "expense" ? "var(--expense-color)" : "var(--income-color)" }}>
-                        {milestones.length > 0 && milestones[0]?.whatIfBalance !== undefined
-                          ? new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(milestones[milestones.length - 1].whatIfBalance! - milestones[milestones.length - 1].balance)
-                          : "—"}
-                      </span>
-                    </span>
-                  </div>
-                )}
+                {/* Per-milestone impact table */}
+                {whatIfAmount && parseFloat(whatIfAmount) > 0 && (() => {
+                  const fmt = (n: number) => new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+                  const sign = whatIfType === "expense" ? -1 : 1;
+                  return (
+                    <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--border-subtle)" }}>
+                      {/* Header */}
+                      <div style={{
+                        display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr",
+                        background: whatIfType === "expense" ? "rgba(244,63,94,0.08)" : "rgba(16,185,129,0.08)",
+                        padding: "10px 14px", borderBottom: "1px solid var(--border-subtle)",
+                      }}>
+                        {["Mesi", "Saldo Base", "Con scenario", "Δ Differenza"].map(h => (
+                          <div key={h} style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</div>
+                        ))}
+                      </div>
+                      {/* Rows */}
+                      {milestones.map(({ months: m, balance, whatIfBalance }) => {
+                        const delta = whatIfBalance !== undefined ? whatIfBalance - balance : 0;
+                        return (
+                          <div key={m} style={{
+                            display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr",
+                            padding: "10px 14px",
+                            borderBottom: "1px solid var(--border-subtle)",
+                            background: m === months ? "var(--accent-dim)" : "transparent",
+                            transition: "background 0.15s",
+                          }}>
+                            <div style={{ fontSize: 13, fontWeight: m === months ? 700 : 500, color: m === months ? "var(--accent)" : "var(--text-secondary)" }}>+{m}m</div>
+                            <div style={{ fontSize: 12, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)" }}>{fmt(balance)}</div>
+                            <div style={{ fontSize: 12, fontFamily: "JetBrains Mono, monospace", color: whatIfType === "expense" ? "var(--expense-color)" : "var(--income-color)" }}>
+                              {whatIfBalance !== undefined ? fmt(whatIfBalance) : "—"}
+                            </div>
+                            <div style={{ fontSize: 12, fontFamily: "JetBrains Mono, monospace", fontWeight: 600, color: delta >= 0 ? "var(--income-color)" : "var(--expense-color)" }}>
+                              {delta >= 0 ? "+" : ""}{fmt(delta)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>

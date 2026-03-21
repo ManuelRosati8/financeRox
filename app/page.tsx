@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight, BarChart3, Calendar, Zap, TrendingUp, Shield,
   Sparkles, Tag, Percent, CheckCircle2, ChevronRight,
 } from "lucide-react";
+import { LandingHeader } from "@/components/landing/LandingHeader";
 
 export default async function LandingPage() {
   const supabase = await createClient();
@@ -22,135 +24,7 @@ export default async function LandingPage() {
       }}
     >
       {/* ─── STICKY HEADER ─── */}
-      <header
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          background: "rgba(10,10,10,0.88)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderBottom: "1px solid var(--border-subtle)",
-          padding: "0 6%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          height: 64,
-        }}
-      >
-        {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 10,
-              background: "linear-gradient(135deg, #f97316, #fb923c)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 900,
-              fontSize: 14,
-              color: "white",
-              boxShadow: "0 4px 12px rgba(249,115,22,0.4)",
-            }}
-          >
-            F
-          </div>
-          <span style={{ fontWeight: 800, fontSize: 18, letterSpacing: "-0.01em" }}>
-            finance
-            <span style={{ color: "var(--accent)" }}>Rox</span>
-          </span>
-        </div>
-
-        {/* Nav */}
-        <nav
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 32,
-          }}
-        >
-          {[
-            { label: "Feature", href: "#features" },
-            { label: "Future Self", href: "#futureself" },
-            { label: "Calendario", href: "#calendar" },
-          ].map(({ label, href }) => (
-            <a
-              key={href}
-              href={href}
-              style={{
-                fontSize: 13,
-                fontWeight: 500,
-                color: "var(--text-secondary)",
-                textDecoration: "none",
-                transition: "color 0.15s",
-              }}
-            >
-              {label}
-            </a>
-          ))}
-        </nav>
-
-        {/* CTA */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {isLoggedIn ? (
-            <Link
-              href="/dashboard"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                background: "var(--accent)",
-                color: "white",
-                padding: "9px 22px",
-                borderRadius: 99,
-                fontSize: 13,
-                fontWeight: 700,
-                textDecoration: "none",
-                boxShadow: "0 4px 14px rgba(249,115,22,0.35)",
-              }}
-            >
-              Vai alla Dashboard
-              <ArrowRight size={14} />
-            </Link>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "var(--text-secondary)",
-                  textDecoration: "none",
-                  padding: "8px 16px",
-                }}
-              >
-                Accedi
-              </Link>
-              <Link
-                href="/register"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "var(--accent)",
-                  color: "white",
-                  padding: "9px 22px",
-                  borderRadius: 99,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  boxShadow: "0 4px 14px rgba(249,115,22,0.35)",
-                }}
-              >
-                Inizia Ora
-                <ArrowRight size={14} />
-              </Link>
-            </>
-          )}
-        </div>
-      </header>
+      <LandingHeader isLoggedIn={isLoggedIn} />
 
       {/* ─── HERO ─── */}
       <section
@@ -468,6 +342,105 @@ export default async function LandingPage() {
                 />
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── PROBLEM STRIP ─── */}
+      <section style={{ padding: "60px 6%" }}>
+        <div
+          className="reveal"
+          style={{
+            maxWidth: 860,
+            margin: "0 auto",
+            background: "var(--glass-bg)",
+            backdropFilter: "blur(18px)",
+            WebkitBackdropFilter: "blur(18px)",
+            border: "1px solid rgba(249,115,22,0.18)",
+            borderRadius: 20,
+            padding: "44px 48px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 20,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 32 }}>😩</span>
+            <h2
+              style={{
+                fontSize: "clamp(22px, 3.5vw, 34px)",
+                fontWeight: 800,
+                letterSpacing: "-0.025em",
+                margin: 0,
+              }}
+            >
+              Stanco di usare{" "}
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #f97316 0%, #fbbf24 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                la calcolatrice
+              </span>{" "}
+              per le tue finanze?
+            </h2>
+          </div>
+          <p style={{ fontSize: 16, color: "var(--text-secondary)", margin: 0, lineHeight: 1.65 }}>
+            Ti riconosci in almeno una di queste situazioni?
+          </p>
+          <ul
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 14,
+              listStyle: "none",
+              padding: 0,
+              margin: 0,
+            }}
+          >
+            {[
+              { icon: "📊", text: "Apri Excel ogni mese e ricominci da capo a sommare entrate e uscite" },
+              { icon: "🤔", text: "Non sai mai quanto puoi davvero spendere senza andare in rosso" },
+              { icon: "🎯", text: "Hai un obiettivo di risparmio ma non sai se ce la farai" },
+              { icon: "🔮", text: "Vorresti sapere com'è il tuo saldo tra 6 mesi ma non hai idea da dove cominciare" },
+            ].map(({ icon, text }) => (
+              <li
+                key={text}
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  alignItems: "flex-start",
+                  background: "var(--bg-subtle)",
+                  border: "1px solid var(--border-subtle)",
+                  borderRadius: 12,
+                  padding: "14px 16px",
+                  fontSize: 14,
+                  color: "var(--text-secondary)",
+                  lineHeight: 1.5,
+                }}
+              >
+                <span style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>{icon}</span>
+                <span>{text}</span>
+              </li>
+            ))}
+          </ul>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              paddingTop: 4,
+              borderTop: "1px solid var(--border-subtle)",
+            }}
+          >
+            <span style={{ fontSize: 22 }}>🚀</span>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: "var(--text-primary)" }}>
+              A tutto questo ci pensa{" "}
+              <span style={{ color: "var(--accent)" }}>financeRox</span>
+              {" "}— in automatico, ogni giorno.
+            </p>
           </div>
         </div>
       </section>
@@ -857,6 +830,207 @@ export default async function LandingPage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ─── FAQ ─── */}
+      <section id="faq" style={{ padding: "100px 6%" }}>
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          {/* Header */}
+          <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              marginBottom: 20, padding: "6px 16px", borderRadius: 99,
+              background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.25)",
+            }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                FAQ
+              </span>
+            </div>
+            <h2 style={{
+              fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 900,
+              letterSpacing: "-0.03em", marginBottom: 14,
+            }}>
+              Domande Frequenti
+            </h2>
+            <p style={{ fontSize: 16, color: "var(--text-secondary)", maxWidth: 500, margin: "0 auto" }}>
+              Tutto quello che devi sapere per iniziare con financeRox.
+            </p>
+          </div>
+
+          {/* FAQ items */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {([
+              {
+                q: "Come aggiungo una transazione?",
+                a: "Usa il pulsante \"+\" arancione in basso a destra in qualsiasi schermata, oppure vai nella sezione Transazioni e clicca \"Nuova Transazione\". Puoi registrare entrate, uscite, e indicare se si tratta di una spesa ricorrente (affitto, abbonamenti, ecc.).",
+              },
+              {
+                q: "Cos'è il \"Safe to Spend\" (Denaro Libero)?",
+                a: "È la somma che puoi spendere liberamente: saldo attuale meno le spese ricorrenti non ancora avvenute in questo mese. Se hai impostato un'aliquota fiscale nelle impostazioni, viene sottratta anche la quota accantonata per le tasse.",
+              },
+              {
+                q: "Come funzionano gli Obiettivi di Risparmio?",
+                a: "Nella sezione Obiettivi crei un traguardo (es. \"Vacanza 2025 — €3000\") con una data limite e un importo corrente. L'app calcola quanto devi risparmiare ogni mese per arrivarci in tempo. Quando registri un'entrata, puoi destinare direttamente una percentuale o quota fissa a un obiettivo.",
+              },
+              {
+                q: "Come funziona il Calendario Finanziario?",
+                a: "Lo trovi nella sezione Future Self. Mostra, giorno per giorno, tutte le entrate e uscite ricorrenti previste per il mese visualizzato. Puoi navigare avanti e indietro tra i mesi con le frecce. Il saldo stimato viene proiettato automaticamente in base alle transazioni ricorrenti.",
+              },
+              {
+                q: "Cosa sono le transazioni ricorrenti?",
+                a: "Sono transazioni che si ripetono automaticamente con una certa frequenza (giornaliera, settimanale, mensile, annuale). Una volta registrata la prima occorrenza e spuntata l'opzione \"Ricorrente\", financeRox le include automaticamente nel Calendario e nelle proiezioni Future Self.",
+              },
+              {
+                q: "Come funziona la proiezione Future Self?",
+                a: "Analizza il totale di entrate e uscite ricorrenti per stimare il tuo saldo mese per mese fino a 24 mesi nel futuro. Mostra milestone finanziarie (es. quando raggiungerai €10.000) e un grafico con la curva del patrimonio nel tempo.",
+              },
+              {
+                q: "Posso collegare il mio conto bancario?",
+                a: "Al momento financeRox funziona con inserimento manuale delle transazioni — questo ti garantisce massimo controllo e privacy. L'integrazione con i conti bancari è nella roadmap. Iscriviti per ricevere aggiornamenti sulle nuove funzionalità.",
+              },
+              {
+                q: "I miei dati sono al sicuro?",
+                a: "Sì. I dati sono memorizzati su Supabase con autenticazione sicura e crittografia. Non condividiamo mai le tue informazioni finanziarie con terze parti. Puoi esportare o eliminare il tuo account in qualsiasi momento dalle Impostazioni.",
+              },
+            ] as { q: string; a: string }[]).map(({ q, a }) => (
+              <details
+                key={q}
+                style={{
+                  background: "var(--glass-bg)",
+                  backdropFilter: "blur(18px)",
+                  WebkitBackdropFilter: "blur(18px)",
+                  border: "1px solid var(--glass-border)",
+                  borderRadius: 14,
+                  overflow: "hidden",
+                }}
+              >
+                <summary
+                  style={{
+                    padding: "18px 22px",
+                    fontSize: 15,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    listStyle: "none",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 12,
+                    userSelect: "none",
+                  }}
+                >
+                  {q}
+                  <span style={{
+                    flexShrink: 0, width: 22, height: 22, borderRadius: "50%",
+                    background: "rgba(249,115,22,0.12)", border: "1px solid rgba(249,115,22,0.25)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 16, color: "var(--accent)", fontWeight: 400, lineHeight: 1,
+                  }}>
+                    +
+                  </span>
+                </summary>
+                <div style={{
+                  padding: "0 22px 20px",
+                  fontSize: 14,
+                  color: "var(--text-secondary)",
+                  lineHeight: 1.75,
+                  borderTop: "1px solid var(--border-subtle)",
+                  marginTop: 0,
+                  paddingTop: 16,
+                }}>
+                  {a}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── BUG REPORT & FEEDBACK ─── */}
+      <section id="bug-report" style={{ padding: "80px 6% 100px" }}>
+        <div style={{
+          maxWidth: 680, margin: "0 auto",
+          background: "var(--glass-bg)",
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
+          border: "1px solid rgba(249,115,22,0.22)",
+          borderRadius: 22,
+          padding: "48px 44px",
+          textAlign: "center",
+        }}>
+          {/* Icon */}
+          <div style={{
+            width: 56, height: 56, borderRadius: 16,
+            background: "rgba(249,115,22,0.12)", border: "1px solid rgba(249,115,22,0.25)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 22px",
+            fontSize: 26,
+          }}>
+            🐛
+          </div>
+
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            marginBottom: 16, padding: "5px 14px", borderRadius: 99,
+            background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.25)",
+          }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.07em", textTransform: "uppercase" }}>
+              Bug & Feedback
+            </span>
+          </div>
+
+          <h2 style={{ fontSize: "clamp(22px, 3vw, 34px)", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 14 }}>
+            Hai trovato un problema?
+          </h2>
+          <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: 34, maxWidth: 460, margin: "0 auto 34px" }}>
+            Aiutaci a migliorare financeRox. Segnala bug, comportamenti inattesi
+            o suggerisci nuove funzionalità — ogni feedback conta!
+          </p>
+
+          {/* What to include */}
+          <div style={{
+            textAlign: "left", marginBottom: 32,
+            background: "var(--bg-subtle)", borderRadius: 12,
+            padding: "18px 22px",
+            border: "1px solid var(--border-subtle)",
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>
+              Includi nel report
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {[
+                "Descrizione del problema riscontrato",
+                "Passaggi per riprodurlo (es. clicco su X, poi Y…)",
+                "Qual era il comportamento atteso",
+                "Screenshot o registrazione schermo (se possibile)",
+              ].map((item) => (
+                <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: "var(--text-secondary)" }}>
+                  <CheckCircle2 size={14} color="var(--accent)" style={{ flexShrink: 0, marginTop: 1 }} />
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <a
+              href="mailto:support@financerox.app?subject=Bug%20Report%20-%20financeRox&body=Descrizione%20del%20problema%3A%0A%0APassaggi%20per%20riprodurlo%3A%0A%0AComportamento%20atteso%3A%0A%0ADisspositivo%20%2F%20browser%3A"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 9,
+                background: "var(--accent)", color: "white",
+                padding: "13px 28px", borderRadius: 99,
+                fontSize: 14, fontWeight: 700, textDecoration: "none",
+                boxShadow: "0 6px 20px rgba(249,115,22,0.35)",
+              }}
+            >
+              ✉️ Invia via Email
+            </a>
+          </div>
+
+          <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 22 }}>
+            Risposta entro 24–48 ore nei giorni lavorativi.
+          </p>
         </div>
       </section>
 

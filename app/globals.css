@@ -32,28 +32,28 @@
 
 /* ─── LIGHT THEME — Bianco + Arancione ─── */
 [data-theme="light"] {
-  --bg-base:        #f8f8f8;
+  --bg-base:        #f4f5f7;
   --bg-surface:     #ffffff;
   --bg-elevated:    #ffffff;
-  --bg-subtle:      #f0f0f0;
-  --border:         #e0e0e0;
-  --border-subtle:  #eaeaea;
-  --text-primary:   #0d0d0d;
-  --text-secondary: #555555;
-  --text-muted:     #999999;
+  --bg-subtle:      #eceef2;
+  --border:         #cacdd6;
+  --border-subtle:  #dde0e8;
+  --text-primary:   #0a0a0a;
+  --text-secondary: #2d2d2d;
+  --text-muted:     #5c6070;
 
   --accent:         #ea6c0a;
   --accent-hover:   #f97316;
   --accent-dim:     rgba(234,108,10,0.10);
   --accent-border:  rgba(234,108,10,0.25);
 
-  --income-color:   #16a34a;
-  --expense-color:  #dc2626;
-  --chart-grid:     rgba(0,0,0,0.06);
-  --shadow:         0 4px 20px rgba(0,0,0,0.10);
-  --shadow-lg:      0 8px 40px rgba(0,0,0,0.15);
-  --glass-bg:       rgba(255,255,255,0.92);
-  --glass-border:   rgba(0,0,0,0.07);
+  --income-color:   #15803d;
+  --expense-color:  #b91c1c;
+  --chart-grid:     rgba(0,0,0,0.08);
+  --shadow:         0 4px 20px rgba(0,0,0,0.13);
+  --shadow-lg:      0 8px 40px rgba(0,0,0,0.18);
+  --glass-bg:       rgba(255,255,255,0.95);
+  --glass-border:   rgba(0,0,0,0.10);
   color-scheme: light;
 }
 
@@ -283,6 +283,103 @@ html, body {
     gap: 40px;
   }
 }
+
+/* ─── FORM INPUT SYSTEM ──────────────────────────────────────────────────── */
+
+/* Global focus ring for all text/number/date inputs and textareas */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="search"],
+textarea {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+input[type="search"]:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+}
+input:hover:not(:focus),
+textarea:hover:not(:focus) {
+  border-color: var(--border) !important;
+}
+
+/* Calendar icon color for date inputs */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(60%) sepia(80%) saturate(400%) hue-rotate(5deg);
+  cursor: pointer;
+  opacity: 0.7;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Remove browser default select appearance globally */
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+select:focus {
+  outline: none !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+}
+select:hover:not(:focus) {
+  border-color: var(--border) !important;
+}
+
+/* ─── Reusable UI kit classes ─────────────────────────────────────── */
+
+/* rox-input: shaped input for dialogs and forms */
+.rox-input {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.rox-input:focus {
+  outline: none;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+}
+.rox-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* rox-select: styled native select (pair with an absolute ChevronDown icon) */
+.rox-select {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.rox-select:focus {
+  outline: none;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+}
+.rox-select option {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
 
 /* Recharts — theme-aware */
 .recharts-cartesian-grid line { stroke: var(--chart-grid) !important; }
