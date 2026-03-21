@@ -1,16 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import {
   TrendingUp, TrendingDown, Wallet, PiggyBank, ArrowUpRight, ArrowDownRight, ExternalLink
 } from "lucide-react";
-import { useTransactions, useSavingsGoals, useProfile } from "@/lib/supabase/hooks";
+import { useTransactions, useSavingsGoals, useProfile, useCategories } from "@/lib/supabase/hooks";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { SpendingDonut } from "@/components/charts/SpendingDonut";
 import { MonthlyBarChart } from "@/components/charts/MonthlyBarChart";
 import { MoneyValue } from "@/components/ui/MoneyValue";
 import { AdjustBalanceDialog } from "@/components/dashboard/AdjustBalanceDialog";
+import { LifestyleInflationWidget } from "@/components/dashboard/LifestyleInflationWidget";
+import { RoxInsightWidget } from "@/components/dashboard/RoxInsightWidget";
 
 function KpiCard({
   label, value, subtitle, icon: Icon, color, trend, delay = 0, href, hint, onValueClick
@@ -22,7 +24,7 @@ function KpiCard({
   const isPercent = label === "Tasso di Risparmio";
   const content = (
     <div
-      className="glass card-hover fade-up"
+      className="glass card-hover fade-up shimmer-card"
       style={{
         padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12,
         animationDelay: `${delay}s`,
@@ -87,10 +89,18 @@ export default function DashboardPage() {
   const { data: transactions = [], isLoading } = useTransactions();
   const { data: goals = [] } = useSavingsGoals();
   const { data: profile } = useProfile();
+  const { data: categories = [] } = useCategories();
 
   const [adjustState, setAdjustState] = useState<{ open: boolean; type: "balance" | "income"; currentValue: number; label: string }>({
     open: false, type: "balance", currentValue: 0, label: ""
   });
+
+  // Tax rate from settings (localStorage) — read once on mount
+  const [taxRate, setTaxRate] = useState(0);
+  useEffect(() => {
+    const stored = localStorage.getItem("financerox_tax_rate");
+    if (stored) setTaxRate(parseFloat(stored) || 0);
+  }, []);
 
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -135,8 +145,12 @@ export default function DashboardPage() {
 
     const safeToSpend = balance - upcomingExpenses;
 
-    return { income, expenses, balance, savingsRate, safeToSpend, upcomingExpenses };
-  }, [transactions, currentMonth, currentYear]);
+    // Tax accrual: subtract the estimated tax portion of this month's income
+    const taxAccrual = taxRate > 0 ? income * (taxRate / 100) : 0;
+    const safeToSpendNetTax = safeToSpend - taxAccrual;
+
+    return { income, expenses, balance, savingsRate, safeToSpend: safeToSpendNetTax, upcomingExpenses, taxAccrual };
+  }, [transactions, currentMonth, currentYear, taxRate]);
 
   const recent = useMemo(() => transactions.slice(0, 6), [transactions]);
 
@@ -220,7 +234,13 @@ export default function DashboardPage() {
               Denaro Libero (Safe to Spend)
             </h2>
             <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>
-              Il tuo saldo al netto delle {new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(stats.upcomingExpenses)} di spese fisse previste fino a fine mese.
+              Saldo al netto di {new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(stats.upcomingExpenses)} spese fisse
+              {stats.taxAccrual > 0 && (
+                <> — e <strong style={{ color: "var(--accent)" }}>
+                  {new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(stats.taxAccrual)}
+                </strong> accantonati per tasse ({taxRate}%)
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -350,6 +370,14 @@ export default function DashboardPage() {
           <div className="glass fade-up" style={{ padding: 22, animationDelay: "0.1s" }}>
             <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 18 }}>Spese per Categoria</h2>
             <SpendingDonut data={categorySpending} />
+          </div>
+
+          <div className="fade-up" style={{ animationDelay: "0.25s" }}>
+            <LifestyleInflationWidget transactions={transactions} />
+          </div>
+
+          <div className="fade-up" style={{ animationDelay: "0.32s" }}>
+            <RoxInsightWidget transactions={transactions} categories={categories} />
           </div>
 
           <div className="glass fade-up" style={{ padding: 22, animationDelay: "0.2s" }}>

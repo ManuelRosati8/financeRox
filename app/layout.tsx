@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 export const metadata: Metadata = {
   title: "financeRox — Personal Finance",
   description:
-    "Track income, expenses, savings goals, and predict your financial future with financeRox.",
+    "Traccia entrate, uscite, obiettivi di risparmio e prevedi il tuo futuro finanziario con financeRox.",
+  keywords: "finanza personale, risparmio, budget, investimenti",
+  authors: [{ name: "financeRox" }],
 };
 
 export default function RootLayout({
@@ -16,7 +19,10 @@ export default function RootLayout({
   return (
     <html lang="it" className="dark">
       <body className="antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          <ScrollReveal />
+          {children}
+        </Providers>
       </body>
     </html>
   );

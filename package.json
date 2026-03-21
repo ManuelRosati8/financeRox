@@ -1,6 +1,6 @@
 {
-  "name": "finance-temp",
-  "version": "0.1.0",
+  "name": "finance-rox",
+  "version": "0.2.2",
   "private": true,
   "scripts": {
     "dev": "next dev",

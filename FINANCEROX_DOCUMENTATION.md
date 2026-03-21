@@ -1,5 +1,8 @@
 # Documentazione Completa - financeRox
 
+> **Versione 2.0** — Ultimo aggiornamento: Marzo 2026  
+> Changelog v2: Landing Page premium, rimozione paywall Stripe (Testing Mode), Smart Tags, Lifestyle Inflation widget, Pianificatore Tasse, Running Balance Calendario.
+
 Questo documento contiene tutte le istruzioni necessarie per lanciare, testare e deployare (pubblicare) l'applicazione **financeRox**, nonché un prompt dettagliato per rigenerare l'architettura da zero con un'altra Intelligenza Artificiale.
 
 ---
@@ -118,6 +121,9 @@ L'interfaccia deve avere un look & feel estremamente premium, ispirato al glassm
 ---
 
 ## PARTE 3: Integrazione Abbonamenti PRO (Stripe)
+
+> ⚠️ **Testing Mode attivo**: Il paywall Stripe è attualmente disabilitato. La funzione `useSubscription` in `lib/supabase/hooks.ts` restituisce `{ isPro: true }`. Le funzionalità PRO (Future Self 24 mesi, What-if, Calendario) sono visibili con un'etichetta "PRO" ma pienamente accessibili. Per ri-abilitare il paywall in produzione, cambia `isPro: true` → `isPro: false` e collega la verifica al campo `is_pro` del profilo utente.
+
 La sezione "Future Self" contiene un paywall mockato per bloccare alcune funzioni (es. previsione oltre i 6 mesi, What-if e Calendario). Per rendere reale questo sistema con **Stripe**:
 
 1. Crea un account su [Stripe](https://stripe.com).
@@ -126,3 +132,54 @@ La sezione "Future Self" contiene un paywall mockato per bloccare alcune funzion
 4. **Webhooks**: Crea una seconda API Route (es. `app/api/webhooks/route.ts`) per ricevere gli eventi da Stripe (`checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`).
 5. Quando il webhook riceve l'evento di pagamento confermato, aggiorna la tabella `profiles` su Supabase impostando `is_pro = true` per quell'utente.
 6. Nel frontend e nelle chiamate API, verifica la property `is_pro` del profilo utente per mostrare o nascondere i contenuti premium.
+
+---
+
+## PARTE 4: Changelog Fase 2 — Marzo 2026
+
+### 4.1 Landing Page Premium (`app/page.tsx`)
+- **Server component** che verifica la sessione Supabase lato server.
+- Render differenziale: se l'utente è loggato mostra CTA "Vai alla Dashboard"; altrimenti mostra la landing completa.
+- Sezioni: Header sticky (logo/nav/CTA), Hero con gradiente arancione + mockup app interattivo, Bento Grid 12-colonne con 7 feature card (Dashboard, Safe to Spend, Future Self PRO, Calendario PRO, Smart Tags, Lifestyle Inflation, Pianificatore Tasse), Stats row, Final CTA, Footer.
+- Nessuna dipendenza client / ReactQuery — puro HTML server-side.
+
+### 4.2 Rimozione Paywall Stripe (Testing Mode)
+- `lib/supabase/hooks.ts` → `useSubscription` restituisce ora `{ isPro: true, plan: "PRO" }`.
+- Tutte le funzioni Future Self (Calendario, What-if, proiezioni 12/24 mesi) sono sbloccate.
+- Le etichette "PRO" rimangono visibili nell'UI come indicatori futuri di monetizzazione.
+- **Per ripristinare il paywall**: cambia `isPro: true` → `isPro: false`.
+
+### 4.3 Widget "Lifestyle Inflation" (`components/dashboard/LifestyleInflationWidget.tsx`)
+- Analizza gli ultimi 6 mesi completi di transazioni confermate.
+- Separa **entrate** vs **uscite variabili** (non-ricorrenti) mese per mese.
+- Calcola la variazione % media (media ultimi 3m vs primi 3m).
+- Tre stati: `ok` (uscite controllate), `warning` (lieve incremento), `danger` (lifestyle inflation rilevata).
+- Mini bar-chart a sei colonne integrato con tooltip hover.
+- Inserito nel pannello destro della Dashboard dopo lo Spending Donut.
+
+### 4.4 Pianificatore Tasse (`app/(app)/settings/page.tsx`)
+- Nuovo campo numerico "Aliquota fiscale prevista (%)". 
+- Salvato in `localStorage` con chiave `financerox_tax_rate` (nessuna migrazione DB richiesta).
+- Preview dinamica: mostra l'importo di tasse calcolato su €2.000 di esempio.
+- Sezione dedicata "Finanza" nell'interfaccia Impostazioni.
+
+### 4.5 Smart Tags nelle Transazioni
+- **`lib/types.ts`**: aggiunta property `tags?: string[]` all'interfaccia `Transaction` (documentazione).
+- **Implementazione "hashtag-in-description"**: i tag vengono memorizzati come token `#nomtag` appendati alla descrizione — nessuna colonna DB aggiuntiva richiesta.
+- **`components/transactions/TransactionDialog.tsx`**: 
+  - Form arricchito con input tag stile "chip" (Spazio/Invio per aggiungere, Backspace per rimuovere).
+  - Al salvataggio i tag vengono appendati alla descrizione: `"Spesa supermerc. #vacanze2024"`.
+  - In modalità edit, i tag vengono estratti e mostrati già come chip.
+- **`app/(app)/transactions/page.tsx`**: 
+  - Le chip tag sono cliccabili nelle righe della tabella → attiva filtro istantaneo.
+  - Filtro tag attivo mostra un badge dismiss visibile nella barra filtri.
+  - `filtered` useMemo aggiornato per includere `matchTag`.
+
+### 4.6 Running Balance Calendario (già implementato, documentato)
+- `components/calendar/FutureCalendar.tsx`: calcola il saldo cumulativo giorno per giorno a partire dal saldo corrente.
+- I giorni con saldo negativo mostrano bordo rosso + dot rosso.
+- Le celle del giorno sono cliccabili per pre-riempire la data nel form nuova transazione.
+- Deduplicazione ricorrenze per description per evitare double-counting.
+
+### 4.7 Tipo Profile aggiornato (`lib/types.ts`)
+- `Profile.tax_rate?: number` — percentuale aliquota fiscale personale.

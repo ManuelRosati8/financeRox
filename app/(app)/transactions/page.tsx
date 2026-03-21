@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, Search, Filter, Edit2, Trash2, ArrowUpRight, ArrowDownRight, RefreshCw, CheckSquare, Square, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Search, Filter, Edit2, Trash2, ArrowUpRight, ArrowDownRight, RefreshCw, CheckSquare, Square, ChevronUp, ChevronDown, Tag } from "lucide-react";
 import { useTransactions, useDeleteTransaction, useCategories } from "@/lib/supabase/hooks";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { MoneyValue } from "@/components/ui/MoneyValue";
@@ -16,6 +16,7 @@ export default function TransactionsPage() {
   const [search, setSearch]       = useState("");
   const [typeFilter, setType]     = useState<"all" | "income" | "expense">("all");
   const [catFilter, setCat]       = useState<string>("all");
+  const [tagFilter, setTagFilter] = useState<string>("");
   const [dialogOpen, setDialog]   = useState(false);
   const [editing, setEditing]     = useState<Transaction | null>(null);
   const [deleting, setDeleting]   = useState<string | null>(null);
@@ -28,7 +29,8 @@ export default function TransactionsPage() {
       const matchSearch = !search || t.description.toLowerCase().includes(search.toLowerCase());
       const matchType   = typeFilter === "all" || t.type === typeFilter;
       const matchCat    = catFilter === "all"  || t.category_id === catFilter;
-      return matchSearch && matchType && matchCat;
+      const matchTag    = !tagFilter || t.description.toLowerCase().includes(tagFilter.toLowerCase());
+      return matchSearch && matchType && matchCat && matchTag;
     });
 
     if (sortConfig) {
@@ -178,10 +180,26 @@ export default function TransactionsPage() {
           <Filter size={13} style={{ display: "inline", marginRight: 4 }} />
           {filtered.length} risultati
         </div>
+
+        {/* Tag filter */}
+        {tagFilter && (
+          <button
+            onClick={() => setTagFilter("")}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 5,
+              padding: "5px 10px", borderRadius: 99, fontSize: 12, fontWeight: 600,
+              background: "rgba(139,92,246,0.15)", color: "#a78bfa",
+              border: "1px solid rgba(139,92,246,0.3)", cursor: "pointer",
+            }}
+          >
+            <Tag size={11} />
+            {tagFilter} &times;
+          </button>
+        )}
       </div>
 
-      {/* Table */}
-      <div className="glass table-wrap" style={{ overflow: "hidden", width: "100%" }}>
+      {/* Table — desktop */}
+      <div className="glass table-wrap tx-table-wrap" style={{ overflow: "hidden", width: "100%" }}>
         <div style={{ overflowX: "auto", width: "100%" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
@@ -245,7 +263,36 @@ export default function TransactionsPage() {
                     {formatDate(tx.date)}
                   </td>
                   <td style={{ padding: "14px 16px" }}>
-                    <div style={{ fontWeight: 500, fontSize: 13 }}>{tx.description}</div>
+                    <div style={{ fontWeight: 500, fontSize: 13 }}>
+                      {/* Description without hashtags */}
+                      {tx.description.replace(/#[\w\u00C0-\u017F]+/g, "").trim() || tx.description}
+                    </div>
+                    {/* Smart Tag chips */}
+                    {(() => {
+                      const tagMatches = tx.description.match(/#[\w\u00C0-\u017F]+/g);
+                      if (!tagMatches) return null;
+                      return (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 }}>
+                          {tagMatches.map((tag) => (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => setTagFilter(tag)}
+                              title={`Filtra per ${tag}`}
+                              style={{
+                                padding: "2px 7px", borderRadius: 99,
+                                fontSize: 11, fontWeight: 600, cursor: "pointer",
+                                background: tagFilter === tag ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.12)",
+                                color: "#a78bfa",
+                                border: "1px solid rgba(139,92,246,0.22)",
+                              }}
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                     {tx.is_recurring && (
                       <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
                         <RefreshCw size={10} color="var(--accent-purple)" />
@@ -321,6 +368,78 @@ export default function TransactionsPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile card list — shown only on small screens */}
+      <div className="tx-cards-mobile">
+        {filtered.length === 0 && (
+          <div style={{ padding: 32, textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
+            Nessuna transazione trovata
+          </div>
+        )}
+        {filtered.map((tx) => {
+          const category = categories.find(c => c.id === tx.category_id);
+          const tagMatches = tx.description.match(/#[\w\u00C0-\u017F]+/g);
+          const cleanDesc = tx.description.replace(/#[\w\u00C0-\u017F]+/g, "").trim() || tx.description;
+          return (
+            <div key={tx.id} className="tx-card">
+              <div className="tx-card-row">
+                <span className="tx-card-desc">{cleanDesc}</span>
+                <span style={{
+                  fontFamily: "JetBrains Mono, monospace", fontWeight: 700, fontSize: 14,
+                  color: tx.type === "income" ? "var(--income-color)" : "var(--expense-color)",
+                  whiteSpace: "nowrap",
+                }}>
+                  {tx.type === "income" ? "+" : "-"}{tx.amount.toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                </span>
+              </div>
+              <div className="tx-card-row">
+                <span className="tx-card-meta">{tx.date}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {category && (
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: 4,
+                      padding: "2px 8px", borderRadius: 99,
+                      background: `${category.color}22`, color: category.color,
+                      fontSize: 11, fontWeight: 500,
+                    }}>
+                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: category.color }} />
+                      {category.name}
+                    </span>
+                  )}
+                  {tx.is_recurring && (
+                    <RefreshCw size={11} color="var(--accent)" />
+                  )}
+                </div>
+              </div>
+              {tagMatches && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {tagMatches.map(tag => (
+                    <button key={tag} type="button" onClick={() => setTagFilter(tag)}
+                      style={{
+                        padding: "2px 7px", borderRadius: 99, fontSize: 11, fontWeight: 600,
+                        cursor: "pointer",
+                        background: tagFilter === tag ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.12)",
+                        color: "#a78bfa", border: "1px solid rgba(139,92,246,0.22)",
+                      }}>
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 4 }}>
+                <button onClick={() => { setEditing(tx); setDialog(true); }}
+                  style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 6, borderRadius: 6 }}>
+                  <Edit2 size={14} />
+                </button>
+                <button onClick={() => handleDelete(tx.id)} disabled={deleting === tx.id}
+                  style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--expense-color)", opacity: deleting === tx.id ? 0.4 : 0.8, padding: 6, borderRadius: 6 }}>
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Bulk Action Bar */}

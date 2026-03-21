@@ -38,10 +38,10 @@ export function MobileNav() {
               flex: 1, display: "flex", flexDirection: "column",
               alignItems: "center", justifyContent: "center",
               padding: "10px 4px", textDecoration: "none", gap: 3,
-              color: active ? "var(--accent-purple)" : "var(--text-muted)",
+              color: active ? "var(--accent)" : "var(--text-muted)",
               fontSize: 10, fontWeight: active ? 600 : 400,
-              background: active ? "var(--accent-purple-dim)" : "transparent",
-              borderTop: active ? "2px solid var(--accent-purple)" : "2px solid transparent",
+              background: active ? "var(--accent-dim)" : "transparent",
+              borderTop: active ? "2px solid var(--accent)" : "2px solid transparent",
               transition: "all 0.15s",
             }}
           >

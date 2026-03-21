@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       alignItems: "center",
       justifyContent: "center",
       background: "radial-gradient(circle at top right, rgba(245,158,11,0.08), transparent 40%), var(--bg-primary)",
-      padding: 24,
+      padding: "max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom))",
     }}>
       <div 
         className="glass" 

@@ -217,10 +217,12 @@ export function useProfile() {
 
 // ============================================================
 // SUBSCRIPTION
+// TESTING MODE: All PRO features unlocked. Re-enable Stripe
+// by wiring this hook to a real webhook-verified DB column.
 // ============================================================
 export const useSubscription = () => {
   return useQuery({
     queryKey: ["subscription"],
-    queryFn: async () => ({ isPro: false, plan: "FREE" }),
+    queryFn: async () => ({ isPro: true, plan: "PRO" }),
   });
 };

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   User, Mail, Globe, Palette, Bell, LogOut, LogIn, Sun, Moon,
-  ChevronRight, Shield, CreditCard, Trash2, Save,
+  ChevronRight, Shield, CreditCard, Trash2, Save, Percent,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme-context";
 import { MoneyValue } from "@/components/ui/MoneyValue";
@@ -67,6 +67,7 @@ export default function SettingsPage() {
   const [fullName, setFullName]   = useState("");
   const [email, setEmail]         = useState("utente@example.com");
   const [currency, setCurrency]   = useState("EUR");
+  const [taxRate, setTaxRate]     = useState("");
   const [saved, setSaved]         = useState(false);
 
   useEffect(() => {
@@ -77,12 +78,17 @@ export default function SettingsPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (data?.user?.email) setEmail(data.user.email);
     });
+    // Load tax rate from localStorage
+    const stored = localStorage.getItem("financerox_tax_rate");
+    if (stored) setTaxRate(stored);
   }, [profile, supabase]);
 
   const handleSave = async () => {
     if (profile?.id) {
       await supabase.from('profiles').update({ full_name: fullName, currency }).eq('id', profile.id);
     }
+    // Persist tax rate in localStorage (no DB column required)
+    localStorage.setItem("financerox_tax_rate", taxRate);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -167,6 +173,59 @@ export default function SettingsPage() {
             {saved ? "Salvato!" : "Salva modifiche"}
           </button>
         </div>
+      </Section>
+
+      {/* ── Finanza ── */}
+      <Section title="Finanza">
+        <SettingRow
+          icon={Percent}
+          label="Aliquota fiscale prevista"
+          description="La quota tasse verrà sottratta dal Safe to Spend su ogni entrata"
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.5"
+              value={taxRate}
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                if (!isNaN(v) && v >= 0 && v <= 100) setTaxRate(e.target.value);
+                else if (e.target.value === "") setTaxRate("");
+              }}
+              placeholder="es. 23"
+              style={{
+                padding: "7px 12px", borderRadius: 8, fontSize: 13,
+                background: "var(--bg-subtle)", border: "1px solid var(--border)",
+                color: "var(--text-primary)", outline: "none", width: 90,
+                fontFamily: "JetBrains Mono, monospace",
+              }}
+            />
+            <span style={{ fontSize: 13, color: "var(--text-muted)" }}>%</span>
+          </div>
+        </SettingRow>
+        {taxRate && parseFloat(taxRate) > 0 && (
+          <div style={{
+            marginTop: 4, padding: "10px 14px", borderRadius: 10,
+            background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.15)",
+            fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.65,
+          }}>
+            💡 Con aliquota{" "}
+            <strong style={{ color: "var(--accent)", fontFamily: "JetBrains Mono, monospace" }}>
+              {taxRate}%
+            </strong>
+            , su uno stipendio di <strong style={{ fontFamily: "JetBrains Mono, monospace" }}>€ 2.000</strong>
+            {" "}verranno accantonati{" "}
+            <strong style={{ color: "var(--accent)", fontFamily: "JetBrains Mono, monospace" }}>
+              € {(2000 * parseFloat(taxRate) / 100).toFixed(0)}
+            </strong>
+            {" "}di tasse — il Safe to Spend mostrerà solo le restanti{" "}
+            <strong style={{ fontFamily: "JetBrains Mono, monospace" }}>
+              € {(2000 * (1 - parseFloat(taxRate) / 100)).toFixed(0)}
+            </strong>.
+          </div>
+        )}
       </Section>
 
       {/* ── Aspetto ── */}

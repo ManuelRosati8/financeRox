@@ -32,13 +32,19 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const url = request.nextUrl.clone()
+
+  // Public routes — accessible without authentication
   const isAuthRoute =
     url.pathname.startsWith('/login') ||
     url.pathname.startsWith('/register') ||
     url.pathname.startsWith('/auth')
 
-  if (!user && !isAuthRoute) {
-    url.pathname = '/register'
+  // The root landing page is always public
+  const isLandingPage = url.pathname === '/'
+
+  if (!user && !isAuthRoute && !isLandingPage) {
+    // Redirect unauthenticated users trying to access protected app routes to login
+    url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 

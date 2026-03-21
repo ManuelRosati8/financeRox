@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Info, Lock, Zap, ArrowUp, ArrowDown } from "lucide-react";
-import { useTransactions, useSavingsGoals, useSubscription } from "@/lib/supabase/hooks";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { Info, Zap, ArrowUp, ArrowDown } from "lucide-react";
+import { useTransactions, useSavingsGoals } from "@/lib/supabase/hooks";
 import { computeProjection, computeMilestones } from "@/lib/projection";
 import { ProjectionChart } from "@/components/charts/ProjectionChart";
 import { FutureCalendar } from "@/components/calendar/FutureCalendar";
 import { TransactionDialog } from "@/components/transactions/TransactionDialog";
-import { MoneyValue } from "@/components/ui/MoneyValue";
 import { WhatIfScenario, TransactionType, RecurringInterval, Transaction } from "@/lib/types";
 
 const INTERVALS: { value: RecurringInterval; label: string }[] = [
@@ -17,27 +16,82 @@ const INTERVALS: { value: RecurringInterval; label: string }[] = [
   { value: "yearly",  label: "/ anno"    },
 ];
 
+/** Easing: ease-out cubic */
+function easeOut(t: number) { return 1 - Math.pow(1 - t, 3); }
+
+/** Count-up hook — animates from 0 to `target` once the ref element enters viewport */
+function useCountUp(target: number, duration = 1100) {
+  const [display, setDisplay] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const started = useRef(false);
+
+  const run = useCallback(() => {
+    if (started.current) return;
+    started.current = true;
+    const start = performance.now();
+    const step = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      setDisplay(Math.round(easeOut(progress) * target));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target, duration]);
+
+  useEffect(() => {
+    // Reset when target changes (month switch)
+    started.current = false;
+    setDisplay(0);
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) run(); },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [target, run]);
+
+  return { display, ref };
+}
+
 function MilestoneCard({
   months, baseline, whatIf,
 }: {
   months: number; baseline: number; whatIf?: number;
 }) {
+  const { display: displayBase, ref } = useCountUp(Math.abs(Math.round(baseline)));
   const delta = whatIf !== undefined ? whatIf - baseline : undefined;
+  const { display: displayDelta } = useCountUp(
+    delta !== undefined ? Math.abs(Math.round(delta)) : 0
+  );
+
+  const fmt = (n: number) =>
+    new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+
   return (
-    <div className="glass" style={{ padding: "20px 22px", textAlign: "center" }}>
-      <div style={{ fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
-        +{months} mesi
+    <div
+      ref={ref}
+      className="glass card-hover"
+      style={{ padding: "22px 22px", textAlign: "center", transition: "transform 0.18s, box-shadow 0.18s" }}
+    >
+      <div style={{ fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>
+        +{months} {months === 1 ? "mese" : "mesi"}
       </div>
-      <MoneyValue amount={baseline} size="xl" color="var(--accent)" />
+      <div
+        className="money"
+        style={{ fontSize: 28, fontWeight: 800, color: "var(--accent)", letterSpacing: "-0.03em" }}
+      >
+        {baseline < 0 ? "-" : ""}{fmt(displayBase)}
+      </div>
       {delta !== undefined && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginTop: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginTop: 10 }}>
           {delta >= 0
             ? <ArrowUp size={12} color="var(--income-color)" />
             : <ArrowDown size={12} color="var(--expense-color)" />
           }
-          <span style={{ fontSize: 12, fontFamily: "JetBrains Mono, monospace", color: delta >= 0 ? "var(--income-color)" : "var(--expense-color)" }}>
-            {delta >= 0 ? "+" : ""}
-            {new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(delta)}
+          <span className="money" style={{ fontSize: 13, color: delta >= 0 ? "var(--income-color)" : "var(--expense-color)" }}>
+            {delta >= 0 ? "+" : "-"}{fmt(displayDelta)}
           </span>
           <span style={{ fontSize: 11, color: "var(--text-muted)" }}>what-if</span>
         </div>
@@ -49,9 +103,6 @@ function MilestoneCard({
 export default function FutureSelfPage() {
   const { data: transactions = [] } = useTransactions();
   const { data: goals = [] }        = useSavingsGoals();
-  const { data: subscription } = useSubscription();
-
-  const isPro = subscription?.isPro || false;
 
   const [months, setMonths] = useState<6 | 12 | 24>(6);
   
@@ -182,26 +233,30 @@ export default function FutureSelfPage() {
       {/* Controls */}
       <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
         {[6, 12, 24].map((m) => {
-          const locked = !isPro && m > 6;
+          const isProFeature = m > 6;
           return (
             <button
               key={m}
-              onClick={() => {
-                if (!locked) setMonths(m as 6 | 12 | 24);
-              }}
+              onClick={() => setMonths(m as 6 | 12 | 24)}
               style={{
-                padding: "8px 16px", borderRadius: 20, border: "1px solid", cursor: locked ? "not-allowed" : "pointer",
+                padding: "8px 16px", borderRadius: 20, border: "1px solid", cursor: "pointer",
                 fontSize: 13, fontWeight: 600, transition: "all 0.15s",
                 display: "flex", alignItems: "center", gap: 6,
                 background: months === m ? "var(--bg-elevated)" : "transparent",
                 borderColor: months === m ? "var(--accent)" : "var(--border-subtle)",
-                color: months === m ? "var(--accent)" : (locked ? "var(--text-muted)" : "var(--text-secondary)"),
-                opacity: locked ? 0.6 : 1,
+                color: months === m ? "var(--accent)" : "var(--text-secondary)",
               }}
-              title={locked ? "Passa a PRO per proiezioni a lungo termine" : ""}
             >
-              {locked && <Lock size={12} />}
               {m} Mesi
+              {isProFeature && (
+                <span style={{
+                  fontSize: 9, padding: "1px 5px", borderRadius: 99, fontWeight: 700,
+                  background: "rgba(249,115,22,0.12)", color: "var(--accent)",
+                  border: "1px solid rgba(249,115,22,0.2)",
+                }}>
+                  PRO
+                </span>
+              )}
             </button>
           );
         })}
@@ -232,67 +287,55 @@ export default function FutureSelfPage() {
         initialDate={calendarTxDate}
       />
 
-      {/* Paywall Overlay Wrapper for Calendar and What-If */}
-      <div style={{ position: "relative", marginTop: 10 }}>
-        {!isPro && (
-          <div style={{
-            position: "absolute", inset: -10, zIndex: 10,
-            backdropFilter: "blur(6px) grayscale(0.2)", background: "rgba(9, 9, 11, 0.5)",
-            borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center",
-            flexDirection: "column", padding: 24, textAlign: "center", border: "1px solid rgba(245,158,11,0.2)"
+      {/* ── PRO Features (unlocked, testing mode) ── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 24, marginTop: 10 }}>
+        
+        {/* Calendar section header with PRO badge */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700 }}>Calendario Mensile Interattivo</h2>
+          <span style={{
+            fontSize: 10, padding: "2px 8px", borderRadius: 99, fontWeight: 700,
+            background: "rgba(249,115,22,0.12)", color: "var(--accent)",
+            border: "1px solid rgba(249,115,22,0.25)", letterSpacing: "0.07em",
           }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), var(--accent-hover))",
-              display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16,
-              boxShadow: "0 8px 24px rgba(245,158,11, 0.4)"
-            }}>
-              <Zap size={28} color="white" />
-            </div>
-            <h3 style={{ fontSize: 20, fontWeight: 800, color: "white", marginBottom: 8 }}>
-              Sblocca il Potere del tuo Futuro
-            </h3>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", maxWidth: 380, lineHeight: 1.6, marginBottom: 24 }}>
-              Il <strong style={{color:"var(--accent)"}}>Calendario Mensile Interattivo</strong> e le <strong style={{color:"var(--accent)"}}>Simulazioni "What if"</strong> sono funzionalità esclusive per gli utenti FinanceRox PRO. Prendi il controllo definitivo delle tue previsioni!
-            </p>
-            <button
-              style={{
-                background: "white", color: "#000", border: "none", padding: "12px 28px",
-                borderRadius: 24, fontSize: 14, fontWeight: 800, cursor: "pointer",
-                boxShadow: "0 4px 14px rgba(255,255,255,0.2)", transition: "transform 0.2s"
-              }}
-              onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
-              onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
-              onClick={() => alert("Simulazione Stripe: qui partirà la Checkout Session (es. /api/checkout) per il pagamento mensile/annuale.")}
-            >
-              Passa a PRO con Stripe 💳
-            </button>
-          </div>
-        )}
+            PRO
+          </span>
+        </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 24, pointerEvents: isPro ? "auto" : "none", userSelect: isPro ? "auto" : "none" }}>
-          
-          {/* Calendar */}
-          <FutureCalendar 
-            transactions={transactions} 
-            currentBalance={currentBalance}
-            onDayClick={(date) => {
-              setCalendarTxDate(date);
-              setTxDialogOpen(true);
-            }}
-          />
+        {/* Calendar */}
+        <FutureCalendar 
+          transactions={transactions} 
+          currentBalance={currentBalance}
+          onDayClick={(date) => {
+            setCalendarTxDate(date);
+            setTxDialogOpen(true);
+          }}
+        />
 
-          {/* What-If Panel */}
-          <div className="glass" style={{
-            padding: 24, border: whatIfActive ? "1px solid rgba(245,158,11,0.3)" : "1px solid var(--border-subtle)",
-            background: whatIfActive ? "rgba(245,158,11,0.04)" : undefined, transition: "all 0.25s",
+        {/* What-If section header with PRO badge */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700 }}>Simulatore "Cosa Succede Se…"</h2>
+          <span style={{
+            fontSize: 10, padding: "2px 8px", borderRadius: 99, fontWeight: 700,
+            background: "rgba(249,115,22,0.12)", color: "var(--accent)",
+            border: "1px solid rgba(249,115,22,0.25)", letterSpacing: "0.07em",
           }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: whatIfActive ? 24 : 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Zap size={18} color={whatIfActive ? "#f59e0b" : "var(--text-muted)"} />
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: whatIfActive ? "#f59e0b" : "var(--text-primary)" }}>
-                    Cosa succede se...
-                  </div>
+            PRO
+          </span>
+        </div>
+
+        {/* What-If Panel */}
+        <div className="glass" style={{
+          padding: 24, border: whatIfActive ? "1px solid rgba(245,158,11,0.3)" : "1px solid var(--border-subtle)",
+          background: whatIfActive ? "rgba(245,158,11,0.04)" : undefined, transition: "all 0.25s",
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: whatIfActive ? 24 : 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Zap size={18} color={whatIfActive ? "#f59e0b" : "var(--text-muted)"} />
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: whatIfActive ? "#f59e0b" : "var(--text-primary)" }}>
+                  Cosa succede se...
+                </div>
                   <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
                     Simula l&apos;impatto di una nuova voce ricorrente sul tuo futuro
                   </div>
@@ -395,7 +438,6 @@ export default function FutureSelfPage() {
             )}
           </div>
         </div>
-      </div>
     </div>
   );
 }

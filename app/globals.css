@@ -174,6 +174,116 @@ html, body {
   .mobile-card-text { font-size: 11px !important; }
 }
 
+/* ─── SHIMMER ─── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+/* Subtle ambient shimmer on KPI cards */
+.shimmer-card {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+  background-size: 600px 100%;
+  animation: shimmer 2.6s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Brighter shimmer for PRO badges */
+.pro-shimmer {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+}
+.pro-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.22) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ─── SCROLL REVEAL ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.52s cubic-bezier(0.22,1,0.36,1), transform 0.52s cubic-bezier(0.22,1,0.36,1);
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-d1 { transition-delay: 0.08s; }
+.reveal-d2 { transition-delay: 0.16s; }
+.reveal-d3 { transition-delay: 0.24s; }
+.reveal-d4 { transition-delay: 0.32s; }
+.reveal-d5 { transition-delay: 0.42s; }
+
+/* ─── MOBILE TRANSACTION CARDS ─── */
+.tx-table-wrap  { display: block; }
+.tx-cards-mobile { display: none; flex-direction: column; gap: 10px; }
+
+@media (max-width: 768px) {
+  .tx-table-wrap   { display: none !important; }
+  .tx-cards-mobile { display: flex !important; }
+}
+
+.tx-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: background 0.12s;
+}
+.tx-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.tx-card-desc {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-primary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tx-card-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ─── LANDING SHOWCASE SECTIONS ─── */
+.showcase-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .showcase-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
 /* Recharts — theme-aware */
 .recharts-cartesian-grid line { stroke: var(--chart-grid) !important; }
 .recharts-text { fill: var(--text-muted) !important; font-size: 11px !important; }

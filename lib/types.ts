@@ -24,6 +24,8 @@ export interface Transaction {
   interval: RecurringInterval | null;
   recurring_end: string | null;
   status: 'confirmed' | 'planned';
+  /** Smart Tags — stored as #hashtag tokens appended to description */
+  tags?: string[];
   created_at: string;
 }
 
@@ -45,6 +47,8 @@ export interface Profile {
   full_name: string;
   currency: string;
   avatar_url: string | null;
+  /** Estimated personal tax rate 0-100 used to compute tax-adjusted Safe to Spend */
+  tax_rate?: number;
 }
 
 export interface ProjectionPoint {
