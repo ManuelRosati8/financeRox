@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Sun, Moon, ArrowRight } from "lucide-react";
+import { Globe, Sun, Moon, ArrowRight } from "lucide-react";
 import { useTheme } from "@/lib/theme-context";
+import { useI18n } from "@/lib/i18n/context";
 
 const NAV_LINKS = [
   { label: "Feature",        href: "#features"    },
@@ -15,6 +16,7 @@ const NAV_LINKS = [
 export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
+  const { locale, setLocale } = useI18n();
 
   return (
     <>
@@ -73,22 +75,25 @@ export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           ))}
         </nav>
 
-        {/* Right: theme toggle + CTA */}
+        {/* Right: language toggle + CTA */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Theme toggle */}
+          {/* Language toggle */}
           <button
-            onClick={toggleTheme}
-            title={isDark ? "Passa al tema chiaro" : "Passa al tema scuro"}
+            onClick={() => setLocale(locale === "it" ? "en" : "it")}
+            title={locale === "it" ? "Switch to English" : "Passa all'Italiano"}
             style={{
-              width: 36, height: 36, borderRadius: 10,
+              display: "flex", alignItems: "center", gap: 6,
+              height: 36, padding: "0 12px", borderRadius: 10,
               background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)",
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              color: "var(--text-secondary)", transition: "all 0.15s",
+              cursor: "pointer",
+              color: "var(--text-secondary)", fontSize: 12, fontWeight: 600,
+              transition: "all 0.15s",
             }}
             onMouseOver={e => (e.currentTarget.style.borderColor = "var(--accent)")}
             onMouseOut={e  => (e.currentTarget.style.borderColor = "var(--border-subtle)")}
           >
-            {isDark ? <Sun size={15} /> : <Moon size={15} />}
+            <Globe size={14} />
+            {locale.toUpperCase()}
           </button>
 
           {/* Auth CTA */}
@@ -114,7 +119,7 @@ export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                   color: "var(--text-secondary)", textDecoration: "none", padding: "8px 14px",
                 }}
               >
-                Accedi
+                {locale === "it" ? "Accedi" : "Sign In"}
               </Link>
               <Link
                 href="/register"
@@ -126,7 +131,7 @@ export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                   boxShadow: "0 4px 14px rgba(249,115,22,0.35)",
                 }}
               >
-                Inizia Ora <ArrowRight size={14} />
+                {locale === "it" ? "Inizia Ora" : "Get Started"} <ArrowRight size={14} />
               </Link>
             </>
           )}
@@ -136,7 +141,7 @@ export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
       {/* ─── FLOATING THEME TOGGLE (bottom-left) ─── */}
       <button
         onClick={toggleTheme}
-        title={isDark ? "Passa al tema chiaro" : "Passa al tema scuro"}
+        title={isDark ? (locale === "it" ? "Passa al tema chiaro" : "Switch to light mode") : (locale === "it" ? "Passa al tema scuro" : "Switch to dark mode")}
         style={{
           position: "fixed", bottom: 28, left: 28, zIndex: 200,
           width: 46, height: 46, borderRadius: 14,

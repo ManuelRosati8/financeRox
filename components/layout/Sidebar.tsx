@@ -65,14 +65,21 @@ export function Sidebar() {
       }}
     >
       {/* Logo */}
-      <div style={{ padding: "4px 10px 22px" }}>
+      <div style={{ padding: "0 4px 20px" }}>
         <Link href="/dashboard" style={{ textDecoration: "none", display: "block" }}>
           <Image
             src={theme === "dark" ? "/financeRox_logoBlack.jpg" : "/financeRox_logo.jpg"}
             alt="financeRox"
-            width={250}
-            height={68}
-            style={{ objectFit: "contain", maxHeight: 68, width: "auto" }}
+            width={300}
+            height={80}
+            style={{
+              objectFit: "contain",
+              width: "100%",
+              height: "auto",
+              maxHeight: 80,
+              display: "block",
+              mixBlendMode: theme === "dark" ? "screen" : "multiply",
+            }}
             priority
           />
         </Link>
