@@ -1,17 +1,17 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  TrendingUp, TrendingDown, Wallet, PiggyBank, ArrowUpRight, ArrowDownRight, ExternalLink
+  TrendingUp, TrendingDown, Wallet, PiggyBank, ArrowUpRight, ArrowDownRight, ExternalLink, BarChart3, ReceiptText, Target, PieChart
 } from "lucide-react";
-import { useTransactions, useSavingsGoals, useProfile, useCategories } from "@/lib/supabase/hooks";
+import { useTransactions, useSavingsGoals, useProfile } from "@/lib/supabase/hooks";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { SpendingDonut } from "@/components/charts/SpendingDonut";
 import { MonthlyBarChart } from "@/components/charts/MonthlyBarChart";
 import { MoneyValue } from "@/components/ui/MoneyValue";
 import { AdjustBalanceDialog } from "@/components/dashboard/AdjustBalanceDialog";
-import { RoxInsightWidget } from "@/components/dashboard/RoxInsightWidget";
+import { ScenarioBetaWidget } from "@/components/dashboard/ScenarioBetaWidget";
 import { useI18n } from "@/lib/i18n/context";
 import type { TranslationKey } from "@/lib/i18n/translations";
 
@@ -26,23 +26,42 @@ function KpiCard({
   const isPercentDisplay = !!isPercent;
   const content = (
     <div
-      className="glass card-hover fade-up shimmer-card"
+      className="fade-up"
       style={{
-        padding: "18px 20px", display: "flex", flexDirection: "column", gap: 12,
+        height: "100%",
+        minHeight: 184,
+        padding: "18px 20px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
         animationDelay: `${delay}s`,
         cursor: href ? "pointer" : "default",
-        textDecoration: "none", color: "inherit",
+        textDecoration: "none",
+        color: "inherit",
+        background: "var(--bg-surface)",
+        border: "1px solid var(--border-subtle)",
+        borderRadius: 16,
+        boxShadow: "none",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          {label}
-        </span>
-        <div style={{ width: 32, height: 32, borderRadius: 9, background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            {label}
+          </span>
+          <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 500 }}>
+            {subtitle}
+          </span>
+        </div>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <Icon size={16} color={color} />
         </div>
       </div>
-      <div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600 }}>
+          Valore attuale
+        </span>
         {isPercentDisplay ? (
           <div className="money" style={{ fontSize: 26, fontWeight: 700, color: trend === "up" ? "var(--income-color)" : "var(--text-primary)" }}>
             {value}%
@@ -70,40 +89,101 @@ function KpiCard({
             />
           </div>
         )}
-        <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 3 }}>{subtitle}</div>
       </div>
-      {hint && (
+
+      <div style={{ display: "grid", gridTemplateColumns: hint ? "1fr 1fr" : "1fr", gap: 10, paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
         <div style={{
-          display: "flex", alignItems: "center", gap: 5,
-          fontSize: 11, color, opacity: 0.85, marginTop: 2,
-          paddingTop: 10, borderTop: `1px solid ${color}22`,
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
         }}>
-          <ExternalLink size={11} />
-          {hint}
+          <span style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Periodo
+          </span>
+          <span style={{ fontSize: 12, color: "var(--text-primary)", fontWeight: 600 }}>
+            {subtitle}
+          </span>
         </div>
-      )}
+
+        {hint && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 3, alignItems: "flex-start" }}>
+            <span style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Azione
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color, fontWeight: 600 }}>
+              <ExternalLink size={12} />
+              {hint}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
-  return href ? <Link href={href} style={{ textDecoration: "none" }}>{content}</Link> : content;
+  return href ? <Link href={href} style={{ textDecoration: "none", display: "block", height: "100%" }}>{content}</Link> : content;
+}
+
+function DashboardEmptyState({
+  icon: Icon,
+  title,
+  description,
+  href,
+  cta,
+}: {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  href?: string;
+  cta?: string;
+}) {
+  return (
+    <div style={{ padding: 36, display: "flex", justifyContent: "center" }}>
+      <div style={{ maxWidth: 320, textAlign: "center" }}>
+        <div style={{ width: 52, height: 52, borderRadius: 16, background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+          <Icon size={24} color="var(--text-muted)" />
+        </div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>{title}</div>
+        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8, lineHeight: 1.65 }}>{description}</div>
+        {href && cta && (
+          <Link
+            href={href}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginTop: 18,
+              padding: "9px 16px",
+              borderRadius: 10,
+              background: "var(--accent)",
+              color: "white",
+              textDecoration: "none",
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            {cta}
+          </Link>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function DashboardPage() {
   const { data: transactions = [], isLoading } = useTransactions();
   const { data: goals = [] } = useSavingsGoals();
   const { data: profile } = useProfile();
-  const { data: categories = [] } = useCategories();
   const { t, numberLocale } = useI18n();
 
   const [adjustState, setAdjustState] = useState<{ open: boolean; type: "balance" | "income"; currentValue: number; label: string }>({
     open: false, type: "balance", currentValue: 0, label: ""
   });
 
-  // Tax rate from settings (localStorage) — read once on mount
-  const [taxRate, setTaxRate] = useState(0);
-  useEffect(() => {
-    const stored = localStorage.getItem("financerox_tax_rate");
-    if (stored) setTaxRate(parseFloat(stored) || 0);
-  }, []);
+  // Tax rate from settings (localStorage)
+  const [taxRate] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const stored = window.localStorage.getItem("financerox_tax_rate");
+    return stored ? parseFloat(stored) || 0 : 0;
+  });
 
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -169,6 +249,12 @@ export default function DashboardPage() {
     return Object.values(map).sort((a, b) => b.value - a.value).slice(0, 7);
   }, [transactions]);
 
+  const recurringSummary = useMemo(() => {
+    const recurringIncomeCount = transactions.filter((transaction) => transaction.is_recurring && transaction.type === "income").length;
+    const recurringExpenseCount = transactions.filter((transaction) => transaction.is_recurring && transaction.type === "expense").length;
+    return { recurringIncomeCount, recurringExpenseCount };
+  }, [transactions]);
+
   if (isLoading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
       <div style={{ color: "var(--text-muted)" }}>{t("common.loading")}</div>
@@ -187,7 +273,7 @@ export default function DashboardPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
-      <div className="fade-up">
+      <div className="fade-up dashboard-page-header">
         <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)" }}>
           {greeting}, {profile?.full_name ? (profile.full_name.split(" ")[0].charAt(0).toUpperCase() + profile.full_name.split(" ")[0].slice(1).toLowerCase()) : guestLabel} 👋
         </h1>
@@ -197,7 +283,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Action guide banner ── */}
-      <div className="fade-up" style={{
+      <div className="fade-up dashboard-guide-banner" style={{
         display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
         padding: "16px 20px", borderRadius: 12,
         background: "var(--accent-dim)",
@@ -206,6 +292,9 @@ export default function DashboardPage() {
       }}>
         <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
         <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.7, flex: 1 }}>
+          <strong style={{ color: "var(--text-primary)" }}>Ti ritrovi con la calcolatrice?</strong>
+          {" "}financeRox ti aiuta gia a leggere saldo attuale, entrate del mese, obiettivi e ricorrenze fisse senza rifare i conti a mano.
+          <br />
           <strong style={{ color: "var(--text-primary)" }}>{t("dashboard.whereEdit")}</strong>
           {" — "}
           {t("dashboard.whereEditIncome")}{" "}
@@ -229,7 +318,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Safe to Spend Banner ── */}
-      <div className="fade-up" style={{
+      <div className="fade-up dashboard-safe-banner" style={{
         display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14,
         padding: "18px 22px", borderRadius: 12,
         background: "linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.02))",
@@ -256,7 +345,7 @@ export default function DashboardPage() {
             </p>
           </div>
         </div>
-        <div style={{ textAlign: "right" }}>
+        <div className="dashboard-safe-banner-value" style={{ textAlign: "right" }}>
           <MoneyValue amount={stats.safeToSpend} size="2xl" color="var(--income-color)" />
         </div>
       </div>
@@ -305,7 +394,7 @@ export default function DashboardPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
 
           {/* Monthly bar chart */}
-          <div className="glass fade-up" style={{ padding: 22, animationDelay: "0.1s" }}>
+          <div className="glass fade-up dashboard-panel" style={{ padding: 22, animationDelay: "0.1s" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div>
                 <h2 style={{ fontSize: 15, fontWeight: 600 }}>{t("dashboard.incomeVsExpenses")}</h2>
@@ -320,66 +409,86 @@ export default function DashboardPage() {
               </div>
               <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{t("dashboard.last6Months")}</span>
             </div>
-            <MonthlyBarChart transactions={transactions} />
+            {transactions.length === 0 ? (
+              <DashboardEmptyState
+                icon={BarChart3}
+                title={t("dashboard.emptyChartTitle")}
+                description={t("dashboard.emptyChartDescription")}
+                href="/transactions"
+                cta={t("common.newTransaction")}
+              />
+            ) : (
+              <MonthlyBarChart transactions={transactions} />
+            )}
           </div>
 
           {/* Recent transactions */}
-          <div className="glass fade-up" style={{ padding: 22, animationDelay: "0.15s" }}>
+          <div className="glass fade-up dashboard-panel" style={{ padding: 22, animationDelay: "0.15s" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
               <h2 style={{ fontSize: 15, fontWeight: 600 }}>{t("dashboard.recentTransactions")}</h2>
               <Link href="/transactions" style={{ fontSize: 12, color: "var(--accent)", textDecoration: "none" }}>
                 {t("dashboard.viewAll")}
               </Link>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {recent.map((tx, i) => (
-                <div
-                  key={tx.id}
-                  className="fade-up"
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    padding: "11px 12px", borderRadius: 10,
-                    background: i % 2 === 0 ? "var(--bg-subtle)" : "transparent",
-                    animationDelay: `${0.2 + i * 0.04}s`,
-                    transition: "background 0.15s",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-                    <div style={{
-                      width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-                      background: `${tx.category?.color ?? "#64748b"}22`,
-                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15,
-                    }}>
-                      {tx.type === "income" ? "↑" : "↓"}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 500 }}>{tx.description}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-muted)", display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <span>{formatDate(tx.date)}</span>
-                        {tx.category && <span style={{ color: tx.category.color }}>• {tx.category.name}</span>}
+            {recent.length === 0 ? (
+              <DashboardEmptyState
+                icon={ReceiptText}
+                title={t("dashboard.emptyRecentTitle")}
+                description={t("dashboard.emptyRecentDescription")}
+                href="/transactions"
+                cta={t("common.newTransaction")}
+              />
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {recent.map((tx, i) => (
+                  <div
+                    key={tx.id}
+                    className="fade-up"
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "11px 12px", borderRadius: 10,
+                      background: i % 2 === 0 ? "var(--bg-subtle)" : "transparent",
+                      animationDelay: `${0.2 + i * 0.04}s`,
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                      <div style={{
+                        width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                        background: `${tx.category?.color ?? "#64748b"}22`,
+                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15,
+                      }}>
+                        {tx.type === "income" ? "↑" : "↓"}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 500 }}>{tx.description}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-muted)", display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          <span>{formatDate(tx.date)}</span>
+                          {tx.category && <span style={{ color: tx.category.color }}>• {tx.category.name}</span>}
+                        </div>
                       </div>
                     </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                      {tx.type === "income"
+                        ? <ArrowUpRight size={13} color="var(--income-color)" />
+                        : <ArrowDownRight size={13} color="var(--expense-color)" />
+                      }
+                      <MoneyValue
+                        amount={tx.amount}
+                        color={tx.type === "income" ? "var(--income-color)" : "var(--expense-color)"}
+                        prefix={tx.type === "income" ? "+" : "-"}
+                      />
+                    </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-                    {tx.type === "income"
-                      ? <ArrowUpRight size={13} color="var(--income-color)" />
-                      : <ArrowDownRight size={13} color="var(--expense-color)" />
-                    }
-                    <MoneyValue
-                      amount={tx.amount}
-                      color={tx.type === "income" ? "var(--income-color)" : "var(--expense-color)"}
-                      prefix={tx.type === "income" ? "+" : "-"}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Right column: donut + goals */}
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          <div className="glass fade-up" style={{ padding: 22, animationDelay: "0.1s" }}>
+          <div className="glass fade-up dashboard-panel" style={{ padding: 22, animationDelay: "0.1s" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
               <h2 style={{ fontSize: 15, fontWeight: 600 }}>{t("dashboard.spendingByCategory")}</h2>
               <Link href="/transactions" style={{ fontSize: 11, color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}>
@@ -395,44 +504,68 @@ export default function DashboardPage() {
                 </span> — {t("dashboard.topCategories", { n: categorySpending.length })}
               </div>
             )}
-            <SpendingDonut data={categorySpending} />
+            {categorySpending.length === 0 ? (
+              <DashboardEmptyState
+                icon={PieChart}
+                title={t("dashboard.emptySpendingTitle")}
+                description={t("dashboard.emptySpendingDescription")}
+                href="/transactions"
+                cta={t("common.newTransaction")}
+              />
+            ) : (
+              <SpendingDonut data={categorySpending} />
+            )}
           </div>
 
-          <div className="fade-up" style={{ animationDelay: "0.25s" }}>
-            <RoxInsightWidget transactions={transactions} categories={categories} />
-          </div>
+          <ScenarioBetaWidget
+            currentBalance={stats.balance}
+            monthlyIncome={stats.income}
+            activeGoals={goals.length}
+            recurringIncomeCount={recurringSummary.recurringIncomeCount}
+            recurringExpenseCount={recurringSummary.recurringExpenseCount}
+          />
 
-          <div className="glass fade-up" style={{ padding: 22, animationDelay: "0.2s" }}>
+          <div className="glass fade-up dashboard-panel" style={{ padding: 22, animationDelay: "0.2s" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <h2 style={{ fontSize: 15, fontWeight: 600 }}>{t("dashboard.goalsTitle")}</h2>
               <Link href="/goals" style={{ fontSize: 12, color: "var(--accent)", textDecoration: "none" }}>
                 {t("dashboard.editGoals")}
               </Link>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {goals.slice(0, 3).map((g) => {
-                const pct = Math.min(100, Math.round((g.current_amount / g.target_amount) * 100));
-                return (
-                  <div key={g.id}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7, fontSize: 12 }}>
-                      <span style={{ fontWeight: 500 }}>{g.name}</span>
-                      <span style={{ color: g.color, fontFamily: "JetBrains Mono, monospace", fontWeight: 600 }}>{pct}%</span>
+            {goals.length === 0 ? (
+              <DashboardEmptyState
+                icon={Target}
+                title={t("dashboard.emptyGoalsTitle")}
+                description={t("dashboard.emptyGoalsDescription")}
+                href="/goals"
+                cta={t("goals.addNew")}
+              />
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {goals.slice(0, 3).map((g) => {
+                  const pct = Math.min(100, Math.round((g.current_amount / g.target_amount) * 100));
+                  return (
+                    <div key={g.id}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7, fontSize: 12 }}>
+                        <span style={{ fontWeight: 500 }}>{g.name}</span>
+                        <span style={{ color: g.color, fontFamily: "JetBrains Mono, monospace", fontWeight: 600 }}>{pct}%</span>
+                      </div>
+                      <div style={{ height: 6, borderRadius: 99, background: "var(--bg-subtle)" }}>
+                        <div style={{
+                          height: "100%", width: `${pct}%`, borderRadius: 99,
+                          background: `linear-gradient(90deg, ${g.color}, ${g.color}bb)`,
+                          transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)",
+                        }} />
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5, fontSize: 11, color: "var(--text-muted)" }}>
+                        <span className="money">{formatCurrency(g.current_amount)}</span>
+                        <span className="money">{formatCurrency(g.target_amount)}</span>
+                      </div>
                     </div>
-                    <div style={{ height: 6, borderRadius: 99, background: "var(--bg-subtle)" }}>
-                      <div style={{
-                        height: "100%", width: `${pct}%`, borderRadius: 99,
-                        background: `linear-gradient(90deg, ${g.color}, ${g.color}bb)`,
-                        transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)",
-                      }} />
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5, fontSize: 11, color: "var(--text-muted)" }}>
-                      <span className="money">{formatCurrency(g.current_amount)}</span>
-                      <span className="money">{formatCurrency(g.target_amount)}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

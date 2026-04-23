@@ -106,6 +106,76 @@ html, body {
   background-clip: text;
 }
 
+.brand-wordmark {
+  cursor: pointer;
+  user-select: none;
+  width: fit-content;
+}
+
+.brand-wordmark-finance,
+.brand-wordmark-ox {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  max-width: 0;
+  transition:
+    max-width 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.24s ease,
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.brand-wordmark-finance {
+  color: var(--text-primary);
+  transform: translateX(calc(var(--brand-size, 32px) * 0.22));
+}
+
+.brand-wordmark-rox {
+  display: inline-flex;
+  align-items: baseline;
+  color: var(--accent);
+}
+
+.brand-wordmark-r {
+  display: inline-block;
+  color: var(--accent);
+  transform-origin: center center;
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.brand-wordmark-ox {
+  color: var(--accent);
+  transform: translateX(calc(var(--brand-size, 32px) * -0.18));
+}
+
+.brand-wordmark:hover .brand-wordmark-finance,
+.brand-wordmark:focus-visible .brand-wordmark-finance {
+  opacity: 1;
+  max-width: calc(var(--brand-size, 32px) * 4.2);
+  transform: translateX(0);
+}
+
+.brand-wordmark:hover .brand-wordmark-ox,
+.brand-wordmark:focus-visible .brand-wordmark-ox {
+  opacity: 1;
+  max-width: calc(var(--brand-size, 32px) * 1.7);
+  transform: translateX(0);
+}
+
+.brand-wordmark:hover .brand-wordmark-r,
+.brand-wordmark:focus-visible .brand-wordmark-r {
+  transform: translateX(0);
+}
+
+@media (hover: none) {
+  .brand-wordmark-finance,
+  .brand-wordmark-ox {
+    opacity: 1;
+    max-width: none;
+    transform: translateX(0);
+  }
+}
+
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -138,7 +208,7 @@ html, body {
   .main-content {
     margin-left: 0 !important;
     max-width: 100% !important;
-    padding: 16px 16px 80px !important;
+    padding: 18px 18px 88px !important;
     overflow-x: hidden !important;
   }
   .kpi-grid              { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
@@ -152,6 +222,29 @@ html, body {
   
   .filter-row            { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
   .header-row            { flex-wrap: wrap !important; gap: 14px !important; }
+  .dashboard-guide-banner,
+  .dashboard-safe-banner { padding: 16px !important; border-radius: 14px !important; }
+  .dashboard-safe-banner { align-items: flex-start !important; }
+  .dashboard-safe-banner-value { width: 100%; text-align: left !important; }
+  .dashboard-panel { padding: 18px !important; }
+  .transactions-filter-panel { padding: 14px !important; gap: 10px !important; }
+  .transactions-filter-search,
+  .transactions-filter-select { width: 100% !important; min-width: 0 !important; flex: 1 1 auto !important; }
+  .transactions-filter-meta { align-self: flex-start; white-space: normal !important; }
+  .goals-summary-banner { flex-direction: column !important; align-items: stretch !important; gap: 18px !important; }
+  .goals-summary-stats { gap: 18px !important; flex-wrap: wrap !important; justify-content: space-between !important; }
+  .future-calendar { padding: 18px !important; }
+  .future-calendar-header { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
+  .future-calendar-controls { justify-content: space-between !important; }
+  .future-calendar-grid-scroll { overflow-x: auto; padding-bottom: 6px; }
+  .future-calendar-grid { min-width: 700px; }
+  .future-calendar-day { min-height: 86px !important; }
+  .future-calendar-detail { padding: 16px !important; }
+  .future-calendar-detail-top { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
+  .future-calendar-detail-actions { width: 100%; }
+  .future-calendar-detail-actions button { flex: 1; justify-content: center; }
+  .future-calendar-legend { gap: 10px !important; }
+  .future-calendar-legend-note { width: 100%; margin-left: 0 !important; }
   
   .hide-mobile           { display: none !important; }
   .table-wrap            { overflow-x: auto; width: 100%; border-radius: 14px; }
@@ -172,6 +265,10 @@ html, body {
   .kpi-grid { grid-template-columns: 1fr !important; }
   .header-row h1 { font-size: 22px !important; }
   .mobile-card-text { font-size: 11px !important; }
+  .main-content { padding: 16px 14px 88px !important; }
+  .transactions-primary-action,
+  .goals-primary-action { width: 100%; justify-content: center; }
+  .goals-empty-state { grid-column: span 1 !important; padding: 42px 24px !important; }
 }
 
 /* ─── SHIMMER ─── */
@@ -357,26 +454,47 @@ select:hover:not(:focus) {
   color: var(--text-muted);
 }
 
-/* rox-select: styled native select (pair with an absolute ChevronDown icon) */
+/* rox-select: shared app select */
+.rox-select-shell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+}
+.rox-select-field,
 .rox-select {
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: 10px;
   color: var(--text-primary);
   font-size: 13px;
   -webkit-appearance: none;
   appearance: none;
   cursor: pointer;
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 38px 10px 14px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
+.rox-select-field:focus,
 .rox-select:focus {
   outline: none;
   border-color: var(--accent) !important;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
 }
+.rox-select-field option,
 .rox-select option {
   background: var(--bg-elevated);
   color: var(--text-primary);
+}
+.rox-select-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
 }
 
 /* ─────────────────────────────────────────────────────────────────── */

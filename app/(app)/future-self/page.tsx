@@ -7,14 +7,8 @@ import { computeProjection, computeMilestones } from "@/lib/projection";
 import { ProjectionChart } from "@/components/charts/ProjectionChart";
 import { FutureCalendar } from "@/components/calendar/FutureCalendar";
 import { TransactionDialog } from "@/components/transactions/TransactionDialog";
+import { AppSelect } from "@/components/ui/AppSelect";
 import { WhatIfScenario, TransactionType, RecurringInterval, Transaction } from "@/lib/types";
-
-const INTERVALS: { value: RecurringInterval; label: string }[] = [
-  { value: "daily",   label: "/ giorno"  },
-  { value: "weekly",  label: "/ sett."   },
-  { value: "monthly", label: "/ mese"    },
-  { value: "yearly",  label: "/ anno"    },
-];
 
 /** Easing: ease-out cubic */
 function easeOut(t: number) { return 1 - Math.pow(1 - t, 3); }
@@ -41,9 +35,12 @@ function useCountUp(target: number, duration = 1100) {
   useEffect(() => {
     // Reset when target changes (month switch)
     started.current = false;
-    setDisplay(0);
     const el = ref.current;
-    if (!el) return;
+    if (!el) {
+      // No DOM element attached — run immediately (used for secondary values like delta)
+      run();
+      return;
+    }
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) run(); },
       { threshold: 0.3 }
@@ -104,7 +101,14 @@ export default function FutureSelfPage() {
   const { data: transactions = [] } = useTransactions();
   const { data: goals = [] }        = useSavingsGoals();
 
-  const [months, setMonths] = useState<6 | 12 | 24 | 36>(6);
+  const [months, setMonths] = useState<number>(6);
+  const [customMonths, setCustomMonths] = useState("");
+
+  const activeMonths = useMemo(() => {
+    const n = parseInt(customMonths);
+    if (!isNaN(n) && n >= 1) return Math.min(n, 120);
+    return months;
+  }, [customMonths, months]);
   
   const [whatIfActive,   setWhatIfActive]   = useState(false);
   const [whatIfAmount,   setWhatIfAmount]   = useState("");
@@ -116,7 +120,7 @@ export default function FutureSelfPage() {
   const [isTxDialogOpen, setTxDialogOpen] = useState(false);
 
   const whatIfScenario = useMemo<WhatIfScenario | undefined>(() => {
-    if (!whatIfActive || !whatIfAmount) return undefined;
+    if (!whatIfActive || !whatIfAmount || parseFloat(whatIfAmount) <= 0) return undefined;
     return {
       amount: parseFloat(whatIfAmount) || 0,
       type: whatIfType,
@@ -126,8 +130,8 @@ export default function FutureSelfPage() {
   }, [whatIfActive, whatIfAmount, whatIfType, whatIfInterval, whatIfDesc]);
 
   const projectionData = useMemo(
-    () => computeProjection(transactions, goals, months, whatIfScenario),
-    [transactions, goals, months, whatIfScenario]
+    () => computeProjection(transactions, goals, activeMonths, whatIfScenario),
+    [transactions, goals, activeMonths, whatIfScenario]
   );
   
   const currentBalance = useMemo(() => {
@@ -230,42 +234,84 @@ export default function FutureSelfPage() {
         ))}
       </div>
 
-      {/* Controls */}
-      <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+      {/* Controls — preset buttons */}
+      <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", alignItems: "center" }}>
         {([6, 12, 24, 36] as const).map((m) => {
-          const isProFeature = m > 6;
+          const isBetaPreview = m > 6;
+          const isActive = !customMonths && months === m;
           return (
             <button
               key={m}
-              onClick={() => setMonths(m)}
+              onClick={() => { setMonths(m); setCustomMonths(""); }}
               style={{
                 padding: "8px 16px", borderRadius: 20, border: "1px solid", cursor: "pointer",
                 fontSize: 13, fontWeight: 600, transition: "all 0.15s",
                 display: "flex", alignItems: "center", gap: 6,
-                background: months === m ? "var(--bg-elevated)" : "transparent",
-                borderColor: months === m ? "var(--accent)" : "var(--border-subtle)",
-                color: months === m ? "var(--accent)" : "var(--text-secondary)",
+                background: isActive ? "var(--bg-elevated)" : "transparent",
+                borderColor: isActive ? "var(--accent)" : "var(--border-subtle)",
+                color: isActive ? "var(--accent)" : "var(--text-secondary)",
               }}
             >
               {m} Mesi
-              {isProFeature && (
+              {isBetaPreview && (
                 <span style={{
                   fontSize: 9, padding: "1px 5px", borderRadius: 99, fontWeight: 700,
                   background: "rgba(249,115,22,0.12)", color: "var(--accent)",
                   border: "1px solid rgba(249,115,22,0.2)",
                 }}>
-                  PRO
+                  BETA
                 </span>
               )}
             </button>
           );
         })}
+
+        {/* Separator */}
+        <span style={{ width: 1, height: 24, background: "var(--border-subtle)", margin: "0 4px" }} />
+
+        {/* Beta custom months input */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8,
+          padding: "6px 12px 6px 10px", borderRadius: 20,
+          border: `1px solid ${customMonths ? "var(--accent-purple)" : "var(--border-subtle)"}`,
+          background: customMonths ? "rgba(124,111,247,0.07)" : "transparent",
+          transition: "all 0.15s",
+        }}>
+          <span style={{
+            fontSize: 9, padding: "2px 6px", borderRadius: 99, fontWeight: 700,
+            background: "rgba(124,111,247,0.15)", color: "var(--accent-purple)",
+            border: "1px solid rgba(124,111,247,0.3)", whiteSpace: "nowrap",
+          }}>BETA</span>
+          <span style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap" }}>Mesi custom preview</span>
+          <input
+            type="number"
+            min="1"
+            max="120"
+            value={customMonths}
+            onChange={(e) => setCustomMonths(e.target.value)}
+            placeholder="es. 48"
+            style={{
+              width: 64, padding: "2px 8px", borderRadius: 8,
+              background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)",
+              color: "var(--text-primary)", fontSize: 13,
+              fontFamily: "JetBrains Mono, monospace", outline: "none",
+            }}
+          />
+          {customMonths && (
+            <button
+              type="button"
+              onClick={() => setCustomMonths("")}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 0, fontSize: 14, lineHeight: 1 }}
+              title="Reset"
+            >×</button>
+          )}
+        </div>
       </div>
 
       {/* Main Chart */}
       <div className="glass" style={{ padding: "20px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700 }}>Proiezione del Saldo</h2>
+          <h2 style={{ fontSize: 15, fontWeight: 700 }}>Proiezione del Saldo — {activeMonths} mesi</h2>
           <div style={{ display: "flex", gap: 16, fontSize: 12 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ width: 20, height: 3, background: "var(--accent)", display: "inline-block", borderRadius: 2 }} /> Baseline
@@ -287,10 +333,10 @@ export default function FutureSelfPage() {
         initialDate={calendarTxDate}
       />
 
-      {/* ── PRO Features (unlocked, testing mode) ── */}
+      {/* ── Advanced features in beta preview ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: 24, marginTop: 10 }}>
         
-        {/* Calendar section header with PRO badge */}
+        {/* Calendar section header with beta badge */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <h2 style={{ fontSize: 15, fontWeight: 700 }}>Calendario Mensile Interattivo</h2>
           <span style={{
@@ -298,7 +344,7 @@ export default function FutureSelfPage() {
             background: "rgba(249,115,22,0.12)", color: "var(--accent)",
             border: "1px solid rgba(249,115,22,0.25)", letterSpacing: "0.07em",
           }}>
-            PRO
+            BETA PREVIEW
           </span>
         </div>
 
@@ -312,15 +358,15 @@ export default function FutureSelfPage() {
           }}
         />
 
-        {/* What-If section header with PRO badge */}
+        {/* What-If section header with beta badge */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700 }}>Simulatore "Cosa Succede Se…"</h2>
+          <h2 style={{ fontSize: 15, fontWeight: 700 }}>Simulatore &quot;Cosa Succede Se…&quot;</h2>
           <span style={{
             fontSize: 10, padding: "2px 8px", borderRadius: 99, fontWeight: 700,
             background: "rgba(249,115,22,0.12)", color: "var(--accent)",
             border: "1px solid rgba(249,115,22,0.25)", letterSpacing: "0.07em",
           }}>
-            PRO
+            BETA PREVIEW
           </span>
         </div>
 
@@ -419,17 +465,16 @@ export default function FutureSelfPage() {
                   {/* Interval */}
                   <label>
                     <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>Frequenza</div>
-                    <div style={{ position: "relative" }}>
-                      <select value={whatIfInterval} onChange={(e) => setWhatIfInterval(e.target.value as RecurringInterval)}
-                        className="rox-select"
-                        style={{ width: "100%", padding: "10px 32px 10px 14px" }}
-                      >
-                        <option value="monthly">ogni mese</option>
-                        <option value="yearly">ogni anno</option>
-                        <option value="weekly">ogni settimana</option>
-                        <option value="daily">ogni giorno</option>
-                      </select>
-                    </div>
+                    <AppSelect
+                      options={[
+                        { value: "monthly", label: "ogni mese" },
+                        { value: "yearly", label: "ogni anno" },
+                        { value: "weekly", label: "ogni settimana" },
+                        { value: "daily", label: "ogni giorno" },
+                      ]}
+                      value={whatIfInterval}
+                      onChange={(value) => setWhatIfInterval(value as RecurringInterval)}
+                    />
                   </label>
                   {/* Description */}
                   <label>
@@ -445,7 +490,6 @@ export default function FutureSelfPage() {
                 {/* Per-milestone impact table */}
                 {whatIfAmount && parseFloat(whatIfAmount) > 0 && (() => {
                   const fmt = (n: number) => new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
-                  const sign = whatIfType === "expense" ? -1 : 1;
                   return (
                     <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--border-subtle)" }}>
                       {/* Header */}
@@ -475,7 +519,7 @@ export default function FutureSelfPage() {
                               {whatIfBalance !== undefined ? fmt(whatIfBalance) : "—"}
                             </div>
                             <div style={{ fontSize: 12, fontFamily: "JetBrains Mono, monospace", fontWeight: 600, color: delta >= 0 ? "var(--income-color)" : "var(--expense-color)" }}>
-                              {delta >= 0 ? "+" : ""}{fmt(delta)}
+                              {whatIfBalance !== undefined ? (delta >= 0 ? "+" : "") + fmt(delta) : "—"}
                             </div>
                           </div>
                         );

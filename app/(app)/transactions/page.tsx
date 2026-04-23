@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, Search, Filter, Edit2, Trash2, ArrowUpRight, ArrowDownRight, RefreshCw, CheckSquare, Square, ChevronUp, ChevronDown, Tag } from "lucide-react";
+import { Plus, Search, Filter, Edit2, Trash2, ArrowUpRight, ArrowDownRight, RefreshCw, CheckSquare, Square, ChevronUp, ChevronDown } from "lucide-react";
 import { useTransactions, useDeleteTransaction, useCategories } from "@/lib/supabase/hooks";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { AppSelect } from "@/components/ui/AppSelect";
 import { MoneyValue } from "@/components/ui/MoneyValue";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { TransactionDialog } from "@/components/transactions/TransactionDialog";
 import { Transaction } from "@/lib/types";
 import { useI18n } from "@/lib/i18n/context";
@@ -18,21 +20,25 @@ export default function TransactionsPage() {
   const [search, setSearch]       = useState("");
   const [typeFilter, setType]     = useState<"all" | "income" | "expense">("all");
   const [catFilter, setCat]       = useState<string>("all");
-  const [tagFilter, setTagFilter] = useState<string>("");
   const [dialogOpen, setDialog]   = useState(false);
   const [editing, setEditing]     = useState<Transaction | null>(null);
   const [deleting, setDeleting]   = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: "asc" | "desc" } | null>({ key: "date", direction: "desc" });
+  const [confirmState, setConfirmState] = useState<null | {
+    title: string;
+    description: string;
+    onConfirm: () => Promise<void>;
+  }>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   const filtered = useMemo(() => {
-    let result = transactions.filter((t) => {
+    const result = transactions.filter((t) => {
       const matchSearch = !search || t.description.toLowerCase().includes(search.toLowerCase());
       const matchType   = typeFilter === "all" || t.type === typeFilter;
       const matchCat    = catFilter === "all"  || t.category_id === catFilter;
-      const matchTag    = !tagFilter || t.description.toLowerCase().includes(tagFilter.toLowerCase());
-      return matchSearch && matchType && matchCat && matchTag;
+      return matchSearch && matchType && matchCat;
     });
 
     if (sortConfig) {
@@ -69,19 +75,51 @@ export default function TransactionsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t("transactions.deleteConfirm"))) return;
-    setDeleting(id);
-    await deleteTx.mutateAsync(id);
-    setDeleting(null);
-    setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
+    setConfirmState({
+      title: t("common.delete"),
+      description: t("transactions.deleteConfirm"),
+      onConfirm: async () => {
+        setDeleting(id);
+        try {
+          await deleteTx.mutateAsync(id);
+          setSelectedIds(prev => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
+        } finally {
+          setDeleting(null);
+        }
+      },
+    });
   };
 
   const handleBulkDelete = async () => {
-    if (!confirm(t("transactions.deleteBulkConfirm", { count: selectedIds.size }))) return;
-    setBulkDeleting(true);
-    await Promise.all(Array.from(selectedIds).map(id => deleteTx.mutateAsync(id)));
-    setBulkDeleting(false);
-    setSelectedIds(new Set());
+    setConfirmState({
+      title: t("common.delete"),
+      description: t("transactions.deleteBulkConfirm", { count: selectedIds.size }),
+      onConfirm: async () => {
+        setBulkDeleting(true);
+        try {
+          await Promise.all(Array.from(selectedIds).map(id => deleteTx.mutateAsync(id)));
+          setSelectedIds(new Set());
+        } finally {
+          setBulkDeleting(false);
+        }
+      },
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmState) return;
+
+    setConfirmLoading(true);
+    try {
+      await confirmState.onConfirm();
+      setConfirmState(null);
+    } finally {
+      setConfirmLoading(false);
+    }
   };
 
   const toggleSelectAll = () => {
@@ -108,7 +146,7 @@ export default function TransactionsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Header */}
-      <div className="header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="header-row transactions-page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 700 }}>{t("transactions.title")}</h1>
           <p style={{ color: "var(--text-secondary)", marginTop: 4 }}>
@@ -117,6 +155,7 @@ export default function TransactionsPage() {
         </div>
         <button
           onClick={() => { setEditing(null); setDialog(true); }}
+          className="transactions-primary-action"
           style={{
             display: "flex", alignItems: "center", gap: 8,
             padding: "10px 18px", borderRadius: 10, border: "none", cursor: "pointer",
@@ -134,8 +173,8 @@ export default function TransactionsPage() {
       </div>
 
       {/* Filters */}
-      <div className="glass filter-row" style={{ padding: 16, display: "flex", gap: 12, alignItems: "center" }}>
-        <div style={{ position: "relative", flex: "1 1 200px", minWidth: 200 }}>
+      <div className="glass filter-row transactions-filter-panel" style={{ padding: 16, display: "flex", gap: 12, alignItems: "center" }}>
+        <div className="transactions-filter-search" style={{ position: "relative", flex: "1 1 200px", minWidth: 200 }}>
           <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
           <input
             value={search}
@@ -149,55 +188,31 @@ export default function TransactionsPage() {
           />
         </div>
 
-        <select
+        <AppSelect
+          className="transactions-filter-select"
+          options={[
+            { value: "all", label: t("transactions.allTypes") },
+            { value: "income", label: t("transactions.income") },
+            { value: "expense", label: t("transactions.expense") },
+          ]}
           value={typeFilter}
-          onChange={(e) => setType(e.target.value as "all" | "income" | "expense")}
-          style={{
-            padding: "8px 12px", background: "var(--bg-subtle)",
-            border: "1px solid var(--border-subtle)", borderRadius: 8,
-            color: "var(--text-primary)", fontSize: 13, cursor: "pointer", outline: "none",
-          }}
-        >
-          <option value="all">{t("transactions.allTypes")}</option>
-          <option value="income">{t("transactions.income")}</option>
-          <option value="expense">{t("transactions.expense")}</option>
-        </select>
+          onChange={(value) => setType(value as "all" | "income" | "expense")}
+        />
 
-        <select
+        <AppSelect
+          className="transactions-filter-select"
+          options={[
+            { value: "all", label: t("transactions.allCategories") },
+            ...categories.map((c) => ({ value: c.id, label: c.name })),
+          ]}
           value={catFilter}
-          onChange={(e) => setCat(e.target.value)}
-          style={{
-            padding: "8px 12px", background: "var(--bg-subtle)",
-            border: "1px solid var(--border-subtle)", borderRadius: 8,
-            color: "var(--text-primary)", fontSize: 13, cursor: "pointer", outline: "none",
-          }}
-        >
-          <option value="all">{t("transactions.allCategories")}</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+          onChange={setCat}
+        />
 
-        <div style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+        <div className="transactions-filter-meta" style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
           <Filter size={13} style={{ display: "inline", marginRight: 4 }} />
           {filtered.length} {t("transactions.results")}
         </div>
-
-        {/* Tag filter */}
-        {tagFilter && (
-          <button
-            onClick={() => setTagFilter("")}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 5,
-              padding: "5px 10px", borderRadius: 99, fontSize: 12, fontWeight: 600,
-              background: "rgba(139,92,246,0.15)", color: "#a78bfa",
-              border: "1px solid rgba(139,92,246,0.3)", cursor: "pointer",
-            }}
-          >
-            <Tag size={11} />
-            {tagFilter} &times;
-          </button>
-        )}
       </div>
 
       {/* Table — desktop */}
@@ -242,7 +257,7 @@ export default function TransactionsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((tx, i) => {
+              {filtered.map((tx) => {
                 const isSelected = selectedIds.has(tx.id);
                 return (
                 <tr
@@ -251,7 +266,6 @@ export default function TransactionsPage() {
                     borderBottom: "1px solid var(--border-subtle)",
                     background: isSelected ? "var(--bg-subtle)" : "transparent",
                     transition: "background 0.12s",
-                    opacity: tx.status === 'planned' ? 0.65 : 1,
                   }}
                   onMouseOver={e => (!isSelected && (e.currentTarget.style.background = "rgba(255,255,255,0.025)"))}
                   onMouseOut={e => (!isSelected && (e.currentTarget.style.background = "transparent"))}
@@ -266,35 +280,8 @@ export default function TransactionsPage() {
                   </td>
                   <td style={{ padding: "14px 16px" }}>
                     <div style={{ fontWeight: 500, fontSize: 13 }}>
-                      {/* Description without hashtags */}
                       {tx.description.replace(/#[\w\u00C0-\u017F]+/g, "").trim() || tx.description}
                     </div>
-                    {/* Smart Tag chips */}
-                    {(() => {
-                      const tagMatches = tx.description.match(/#[\w\u00C0-\u017F]+/g);
-                      if (!tagMatches) return null;
-                      return (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 }}>
-                          {tagMatches.map((tag) => (
-                            <button
-                              key={tag}
-                              type="button"
-                              onClick={() => setTagFilter(tag)}
-                              title={`Filtra per ${tag}`}
-                              style={{
-                                padding: "2px 7px", borderRadius: 99,
-                                fontSize: 11, fontWeight: 600, cursor: "pointer",
-                                background: tagFilter === tag ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.12)",
-                                color: "#a78bfa",
-                                border: "1px solid rgba(139,92,246,0.22)",
-                              }}
-                            >
-                              {tag}
-                            </button>
-                          ))}
-                        </div>
-                      );
-                    })()}
                     {tx.is_recurring && (
                       <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
                         <RefreshCw size={10} color="var(--accent-purple)" />
@@ -376,7 +363,6 @@ export default function TransactionsPage() {
       <div className="tx-cards-mobile">
         {filtered.map((tx) => {
           const category = categories.find(c => c.id === tx.category_id);
-          const tagMatches = tx.description.match(/#[\w\u00C0-\u017F]+/g);
           const cleanDesc = tx.description.replace(/#[\w\u00C0-\u017F]+/g, "").trim() || tx.description;
           return (
             <div key={tx.id} className="tx-card">
@@ -409,21 +395,6 @@ export default function TransactionsPage() {
                   )}
                 </div>
               </div>
-              {tagMatches && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                  {tagMatches.map(tag => (
-                    <button key={tag} type="button" onClick={() => setTagFilter(tag)}
-                      style={{
-                        padding: "2px 7px", borderRadius: 99, fontSize: 11, fontWeight: 600,
-                        cursor: "pointer",
-                        background: tagFilter === tag ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.12)",
-                        color: "#a78bfa", border: "1px solid rgba(139,92,246,0.22)",
-                      }}>
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-              )}
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 4 }}>
                 <button onClick={() => { setEditing(tx); setDialog(true); }}
                   style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 6, borderRadius: 6 }}>
@@ -478,6 +449,18 @@ export default function TransactionsPage() {
         open={dialogOpen}
         onClose={() => { setDialog(false); setEditing(null); }}
         initialData={editing}
+      />
+
+      <ConfirmDialog
+        open={confirmState !== null}
+        title={confirmState?.title || t("common.delete")}
+        description={confirmState?.description}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        intent="danger"
+        loading={confirmLoading}
+        onClose={() => { if (!confirmLoading) setConfirmState(null); }}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

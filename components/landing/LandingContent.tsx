@@ -3,7 +3,7 @@
 import Link from "next/link";
 import {
   ArrowRight, BarChart3, Calendar, Zap, TrendingUp, Shield,
-  Sparkles, Tag, Percent, CheckCircle2, ChevronRight,
+  Sparkles, Tag, Target, CheckCircle2, ChevronRight,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
 
@@ -16,6 +16,7 @@ const it = {
   heroH1a: "Controlla il Tuo",
   heroH1b: "Futuro Finanziario",
   heroSub: "Traccia entrate e uscite, visualizza proiezioni a 24 mesi e scopri un calendario finanziario interattivo che prevede ogni movimento sul tuo conto.",
+  heroSupportLine: "Ti ritrovi con la calcolatrice? financeRox ti aiuta gia a leggere saldo attuale, entrate del mese, obiettivi e ricorrenze fisse senza rifare i conti a mano.",
   ctaDashboard: "Vai alla Dashboard",
   ctaStart: "Inizia Gratis",
   ctaSettings: "Impostazioni",
@@ -46,13 +47,13 @@ const it = {
   bentoCards: [
     { badge: "Dashboard", badgeAccent: true, title: "Panoramica Finanziaria Completa", description: "KPI in tempo reale: saldo totale, entrate/uscite mensili, tasso di risparmio. Clicca su qualsiasi valore per aggiustare il saldo in un attimo." },
     { badge: "Safe to Spend", title: "Sai Sempre Quanto Puoi Spendere", description: "Calcola automaticamente il denaro libero sottraendo tutte le uscite fisse ricorrenti previste fino a fine mese." },
-    { badge: "Future Self ✦ PRO", badgeAccent: true, title: "Proiezione Patrimonio 24 Mesi", description: "Vedi dove sarà il tuo conto tra 6, 12 o 24 mesi basandosi sulle ricorrenze reali. Testa scenari 'What-if' aggiungendo nuove entrate o uscite." },
-    { badge: "Calendario ✦ PRO", title: "Running Balance Giornaliero", description: "Calendario mensile interattivo con saldo previsto per ogni giorno. I giorni in rosso segnalano saldo negativo: nessuna sorpresa di fine mese." },
-    { badge: "Smart Tags", title: "Raggruppa per Evento", description: "Aggiungi #tag alle transazioni per vedere il costo totale di #vacanze2024, #rinnovo o qualsiasi progetto in un colpo solo." },
+    { badge: "Future Self · Beta Preview", badgeAccent: true, title: "Proiezione Patrimonio 24 Mesi", description: "Vedi dove sarà il tuo conto tra 6, 12 o 24 mesi basandoti sulle ricorrenze reali. Le funzioni avanzate sono in beta preview e possono evolvere." },
+    { badge: "Calendario · Beta Preview", title: "Running Balance Giornaliero", description: "Calendario mensile interattivo con saldo previsto per ogni giorno. I giorni in rosso segnalano saldo negativo: nessuna sorpresa di fine mese." },
+    { badge: "Categorie", title: "Classifica con chiarezza", description: "Organizza ogni entrata e uscita con categorie visive e filtri immediati per capire subito dove va il tuo denaro." },
     { badge: "Lifestyle Inflation", title: "Analisi Incremento Stile di Vita", description: "Widget che confronta la crescita delle uscite variabili rispetto alle entrate negli ultimi 6 mesi per prevenire il lifestyle creep." },
-    { badge: "Pianificatore Tasse", title: "Accantonamento Fiscale Automatico", description: "Imposta la tua aliquota fiscale in Impostazioni. L'app calcolerà automaticamente la quota tasse da mettere da parte su ogni entrata." },
+    { badge: "Obiettivi", title: "Obiettivi di Risparmio", description: "Imposta un traguardo, monitora il progresso e destina una quota delle entrate direttamente al tuo obiettivo di risparmio." },
   ],
-  futureBadge: "FUTURE SELF ✦ PRO",
+  futureBadge: "FUTURE SELF · BETA PREVIEW",
   futureH2a: "Vedi dove sarai",
   futureH2b: "tra 6, 12 e 24 mesi",
   futureSub: "La proiezione si basa sulle tue ricorrenze reali + media spese variabili degli ultimi 3 mesi. Ogni mese fai crescere un piano, non solo un numero.",
@@ -64,7 +65,7 @@ const it = {
   futureMockLabel: "Proiezione del tuo patrimonio",
   futureMockBasis: "Basato sulle tue abitudini attuali",
   futureMilestones: [{ label: "+6 mesi", value: "€ 15.200" }, { label: "+12 mesi", value: "€ 19.650" }, { label: "+24 mesi", value: "€ 28.100" }],
-  calendarBadge: "CALENDARIO ✦ PRO",
+  calendarBadge: "CALENDARIO · BETA PREVIEW",
   calendarH2a: "Ogni giorno ha",
   calendarH2b: "il suo saldo previsto",
   calendarSub: "Il calendario proietta in automatico tutte le ricorrenze attive nel mese in corso. Clicca qualsiasi giorno per vederne i dettagli o aggiungere una transazione.",
@@ -86,12 +87,12 @@ const it = {
   faqSub: "Tutto quello che devi sapere per iniziare con financeRox.",
   faq: [
     { q: "Come aggiungo una transazione?", a: "Usa il pulsante \"+\" arancione in basso a destra in qualsiasi schermata, oppure vai nella sezione Transazioni e clicca \"Nuova Transazione\". Puoi registrare entrate, uscite, e indicare se si tratta di una spesa ricorrente (affitto, abbonamenti, ecc.)." },
-    { q: "Cos'è il \"Safe to Spend\" (Denaro Libero)?", a: "È la somma che puoi spendere liberamente: saldo attuale meno le spese ricorrenti non ancora avvenute in questo mese. Se hai impostato un'aliquota fiscale nelle impostazioni, viene sottratta anche la quota accantonata per le tasse." },
+    { q: "Cos'è il \"Safe to Spend\" (Denaro Libero)?", a: "È la somma che puoi spendere liberamente: saldo attuale meno le spese ricorrenti non ancora avvenute in questo mese. Serve a capire quanto puoi usare senza compromettere il resto del mese." },
     { q: "Come funzionano gli Obiettivi di Risparmio?", a: "Nella sezione Obiettivi crei un traguardo (es. \"Vacanza 2025 — €3000\") con una data limite e un importo corrente. L'app calcola quanto devi risparmiare ogni mese per arrivarci in tempo. Quando registri un'entrata, puoi destinare direttamente una percentuale o quota fissa a un obiettivo." },
     { q: "Come funziona il Calendario Finanziario?", a: "Lo trovi nella sezione Future Self. Mostra, giorno per giorno, tutte le entrate e uscite ricorrenti previste per il mese visualizzato. Puoi navigare avanti e indietro tra i mesi con le frecce. Il saldo stimato viene proiettato automaticamente in base alle transazioni ricorrenti." },
     { q: "Cosa sono le transazioni ricorrenti?", a: "Sono transazioni che si ripetono automaticamente con una certa frequenza (giornaliera, settimanale, mensile, annuale). Una volta registrata la prima occorrenza e spuntata l'opzione \"Ricorrente\", financeRox le include automaticamente nel Calendario e nelle proiezioni Future Self." },
     { q: "Come funziona la proiezione Future Self?", a: "Analizza il totale di entrate e uscite ricorrenti per stimare il tuo saldo mese per mese fino a 24 mesi nel futuro. Mostra milestone finanziarie (es. quando raggiungerai €10.000) e un grafico con la curva del patrimonio nel tempo." },
-    { q: "Posso collegare il mio conto bancario?", a: "Al momento financeRox funziona con inserimento manuale delle transazioni — questo ti garantisce massimo controllo e privacy. L'integrazione con i conti bancari è nella roadmap. Iscriviti per ricevere aggiornamenti sulle nuove funzionalità." },
+    { q: "Posso collegare il mio conto bancario?", a: "Al momento financeRox funziona con inserimento manuale delle transazioni — questo ti garantisce massimo controllo e privacy. L'integrazione con i conti bancari è nella roadmap e verrà annunciata solo quando saranno pubblicati termini e condizioni specifici." },
     { q: "I miei dati sono al sicuro?", a: "Sì. I dati sono memorizzati su Supabase con autenticazione sicura e crittografia. Non condividiamo mai le tue informazioni finanziarie con terze parti. Puoi esportare o eliminare il tuo account in qualsiasi momento dalle Impostazioni." },
   ],
   bugTitle: "Hai trovato un problema?",
@@ -120,6 +121,7 @@ const en: S = {
   heroH1a: "Take Control of Your",
   heroH1b: "Financial Future",
   heroSub: "Track income and expenses, view 24-month projections and explore an interactive financial calendar that predicts every movement in your account.",
+  heroSupportLine: "Still reaching for a calculator? financeRox already helps you read your current balance, monthly income, goals and fixed recurring items without redoing the math by hand.",
   ctaDashboard: "Go to Dashboard",
   ctaStart: "Start for Free",
   ctaSettings: "Settings",
@@ -150,13 +152,13 @@ const en: S = {
   bentoCards: [
     { badge: "Dashboard", badgeAccent: true, title: "Complete Financial Overview", description: "Real-time KPIs: total balance, monthly income/expenses, savings rate. Click any value to adjust your balance instantly." },
     { badge: "Safe to Spend", title: "Always Know How Much You Can Spend", description: "Automatically calculates your free money by subtracting all recurring fixed expenses expected by end of month." },
-    { badge: "Future Self ✦ PRO", badgeAccent: true, title: "24-Month Wealth Projection", description: "See where your account will be in 6, 12 or 24 months based on real recurring transactions. Test 'What-if' scenarios with new income or expenses." },
-    { badge: "Calendar ✦ PRO", title: "Daily Running Balance", description: "Interactive monthly calendar with projected balance for every day. Red days signal a negative balance: no end-of-month surprises." },
-    { badge: "Smart Tags", title: "Group by Event", description: "Add #tags to transactions to see the total cost of #holiday2024, #renovation or any project at a glance." },
+    { badge: "Future Self · Beta Preview", badgeAccent: true, title: "24-Month Wealth Projection", description: "See where your account will be in 6, 12 or 24 months based on real recurring transactions. Advanced tools are in beta preview and may evolve." },
+    { badge: "Calendar · Beta Preview", title: "Daily Running Balance", description: "Interactive monthly calendar with projected balance for every day. Red days signal a negative balance: no end-of-month surprises." },
+    { badge: "Categories", title: "Classify with clarity", description: "Organise every income and expense with visual categories and instant filters so you can immediately see where your money goes." },
     { badge: "Lifestyle Inflation", title: "Lifestyle Spending Analysis", description: "Widget that compares the growth of variable expenses vs income over the last 6 months to prevent lifestyle creep." },
-    { badge: "Tax Planner", title: "Automatic Tax Accrual", description: "Set your tax rate in Settings. The app will automatically calculate the tax portion to set aside from every income transaction." },
+    { badge: "Goals", title: "Savings Goals", description: "Set a target, track progress and allocate part of your income directly to a savings goal." },
   ],
-  futureBadge: "FUTURE SELF ✦ PRO",
+  futureBadge: "FUTURE SELF · BETA PREVIEW",
   futureH2a: "See where you'll be",
   futureH2b: "in 6, 12 and 24 months",
   futureSub: "The projection is based on your real recurring transactions plus the average variable expenses of the last 3 months. Every month, grow a plan — not just a number.",
@@ -168,7 +170,7 @@ const en: S = {
   futureMockLabel: "Your wealth projection",
   futureMockBasis: "Based on your current habits",
   futureMilestones: [{ label: "+6 months", value: "€ 15,200" }, { label: "+12 months", value: "€ 19,650" }, { label: "+24 months", value: "€ 28,100" }],
-  calendarBadge: "CALENDAR ✦ PRO",
+  calendarBadge: "CALENDAR · BETA PREVIEW",
   calendarH2a: "Every day has",
   calendarH2b: "its projected balance",
   calendarSub: "The calendar automatically projects all active recurrences for the current month. Click any day to view details or add a transaction.",
@@ -190,12 +192,12 @@ const en: S = {
   faqSub: "Everything you need to know to get started with financeRox.",
   faq: [
     { q: "How do I add a transaction?", a: "Use the orange \"+\" button at the bottom right of any screen, or go to the Transactions section and click \"New Transaction\". You can record income, expenses, and mark whether it's a recurring expense (rent, subscriptions, etc.)." },
-    { q: "What is \"Safe to Spend\"?", a: "It's the amount you can spend freely: your current balance minus recurring expenses that haven't occurred yet this month. If you've set a tax rate in settings, the accrued tax portion is also subtracted." },
+    { q: "What is \"Safe to Spend\"?", a: "It's the amount you can spend freely: your current balance minus recurring expenses that haven't occurred yet this month. It helps you understand what remains available without putting the rest of the month at risk." },
     { q: "How do Savings Goals work?", a: "In the Goals section, create a target (e.g. \"Vacation 2025 — €3,000\") with a deadline and current amount. The app calculates how much you need to save each month to reach it in time. When you record income, you can directly allocate a percentage or fixed amount to a goal." },
     { q: "How does the Financial Calendar work?", a: "You'll find it in the Future Self section. It shows, day by day, all projected recurring income and expenses for the displayed month. Navigate forward and backward between months using the arrows. The estimated balance is automatically projected based on recurring transactions." },
     { q: "What are recurring transactions?", a: "They are transactions that repeat automatically at a given frequency (daily, weekly, monthly, yearly). Once you register the first occurrence and check the \"Recurring\" option, financeRox automatically includes them in the Calendar and Future Self projections." },
     { q: "How does the Future Self projection work?", a: "It analyses the total of recurring income and expenses to estimate your balance month by month up to 24 months in the future. It shows financial milestones (e.g. when you'll reach €10,000) and a chart with your wealth curve over time." },
-    { q: "Can I connect my bank account?", a: "Currently financeRox works with manual transaction entry — this guarantees maximum control and privacy. Bank account integration is on the roadmap. Sign up to receive updates on new features." },
+    { q: "Can I connect my bank account?", a: "Currently financeRox works with manual transaction entry — this guarantees maximum control and privacy. Bank account integration is on the roadmap and will be announced only once dedicated terms are published." },
     { q: "Is my data secure?", a: "Yes. Data is stored on Supabase with secure authentication and encryption. We never share your financial information with third parties. You can export or delete your account at any time from Settings." },
   ],
   bugTitle: "Found an issue?",
@@ -272,6 +274,31 @@ const CAL_DAYS = [
 export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
   const { locale } = useI18n();
   const s = locale === "en" ? en : it;
+  const compliance = locale === "en"
+    ? {
+        title: "Public beta notice",
+        body: "financeRox currently offers the public app experience without collecting payments on the website. Advanced modules are marked as beta preview and may change before any paid launch.",
+        points: [
+          "Account and app data are handled via Supabase.",
+          "No card details or mock payments are requested on this site.",
+          "Privacy, terms and contact pages are available before registration.",
+        ],
+        privacy: "Privacy",
+        terms: "Terms",
+        contact: "Contact",
+      }
+    : {
+        title: "Avviso beta pubblica",
+        body: "financeRox offre oggi l'esperienza pubblica dell'app senza raccogliere pagamenti dal sito. I moduli avanzati sono indicati come beta preview e possono cambiare prima di un eventuale lancio commerciale.",
+        points: [
+          "I dati dell'account e dell'app sono gestiti tramite Supabase.",
+          "Sul sito non vengono richiesti dati carta né simulazioni di pagamento.",
+          "Privacy, termini e contatti sono disponibili prima della registrazione.",
+        ],
+        privacy: "Privacy",
+        terms: "Termini",
+        contact: "Contatti",
+      };
 
   const bentoIcons = [
     <BarChart3 key="bc" size={22} color="var(--accent)" />,
@@ -280,7 +307,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
     <Calendar  key="ca" size={22} color="#f59e0b" />,
     <Tag       key="tg" size={22} color="#8b5cf6" />,
     <TrendingUp key="tu" size={22} color="#f59e0b" />,
-    <Percent   key="pc" size={22} color="#06b6d4" />,
+    <Target    key="ta" size={22} color="#06b6d4" />,
   ];
 
   const bentoIds   = [undefined, undefined, "futureself", "calendar", undefined, undefined, undefined];
@@ -313,6 +340,10 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
             {s.heroSub}
           </p>
 
+          <p style={{ fontSize: 14, color: "var(--text-muted)", maxWidth: 760, margin: "-24px auto 36px", lineHeight: 1.75 }}>
+            {s.heroSupportLine}
+          </p>
+
           {/* CTAs */}
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href={isLoggedIn ? "/dashboard" : "/register"} style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "var(--accent)", color: "white", padding: "15px 36px", borderRadius: 99, fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 28px rgba(249,115,22,0.4)" }}>
@@ -329,6 +360,25 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
             {s.proofs.map((item) => (
               <span key={item} style={{ fontSize: 12, color: "var(--text-muted)" }}>{item}</span>
             ))}
+          </div>
+
+          <div className="glass" style={{ marginTop: 28, padding: "18px 20px", textAlign: "left", maxWidth: 760, marginInline: "auto", border: "1px solid rgba(249,115,22,0.18)" }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+              {compliance.title}
+            </div>
+            <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--text-secondary)", marginBottom: 12 }}>
+              {compliance.body}
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
+              {compliance.points.map((item) => (
+                <span key={item} style={{ fontSize: 13, color: "var(--text-secondary)" }}>• {item}</span>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <Link href="/privacy" style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 700 }}>{compliance.privacy}</Link>
+              <Link href="/terms" style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 700 }}>{compliance.terms}</Link>
+              <Link href="/contact" style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 700 }}>{compliance.contact}</Link>
+            </div>
           </div>
         </div>
 
@@ -616,9 +666,9 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
           © {new Date().getFullYear()} financeRox — {s.footerCopyright}
         </span>
         <div style={{ display: "flex", gap: 24 }}>
-          {s.footerLinks.map((item) => (
-            <a key={item} href="#" style={{ fontSize: 12, color: "var(--text-muted)", textDecoration: "none" }}>{item}</a>
-          ))}
+          <Link href="/privacy" style={{ fontSize: 12, color: "var(--text-muted)", textDecoration: "none" }}>{s.footerLinks[0]}</Link>
+          <Link href="/terms" style={{ fontSize: 12, color: "var(--text-muted)", textDecoration: "none" }}>{s.footerLinks[1]}</Link>
+          <Link href="/contact" style={{ fontSize: 12, color: "var(--text-muted)", textDecoration: "none" }}>{s.footerLinks[2]}</Link>
         </div>
       </footer>
     </>

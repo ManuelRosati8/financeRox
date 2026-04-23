@@ -10,10 +10,15 @@ export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
   const supabase = createClient();
 
   const handleEmailRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!acceptedLegal) {
+      setError("Devi accettare Privacy Policy e Termini prima di continuare.");
+      return;
+    }
     setLoading(true);
     setError(null);
     const formData = new FormData(e.currentTarget);
@@ -42,6 +47,10 @@ export default function RegisterPage() {
   };
 
   const handleGoogleRegister = async () => {
+    if (!acceptedLegal) {
+      setError("Devi accettare Privacy Policy e Termini prima di continuare.");
+      return;
+    }
     setLoading(true);
     setError(null);
     const { error } = await supabase.auth.signInWithOAuth({
@@ -65,6 +74,9 @@ export default function RegisterPage() {
         </div>
         <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 8 }}>Crea Account</h1>
         <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>Inizia il tuo percorso verso la libertà finanziaria.</p>
+        <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 10, lineHeight: 1.7 }}>
+          I dati di registrazione e di utilizzo dell'app sono gestiti tramite Supabase. Prima di continuare puoi leggere <Link href="/privacy" style={{ color: "var(--accent)", textDecoration: "none" }}>Privacy Policy</Link> e <Link href="/terms" style={{ color: "var(--accent)", textDecoration: "none" }}>Termini</Link>.
+        </p>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -87,6 +99,18 @@ export default function RegisterPage() {
           </svg>
           Registrati con Google
         </button>
+
+        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+          <input
+            type="checkbox"
+            checked={acceptedLegal}
+            onChange={(e) => setAcceptedLegal(e.target.checked)}
+            style={{ marginTop: 2 }}
+          />
+          <span>
+            Acconsento al trattamento dei dati necessari per creare e gestire il mio account su financeRox. Ho letto la <Link href="/privacy" style={{ color: "var(--accent)", textDecoration: "none" }}>Privacy Policy</Link> e accetto i <Link href="/terms" style={{ color: "var(--accent)", textDecoration: "none" }}>Termini di utilizzo</Link>.
+          </span>
+        </label>
 
         <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "8px 0" }}>
           <div style={{ flex: 1, height: 1, background: "var(--border-subtle)" }} />
@@ -176,6 +200,9 @@ export default function RegisterPage() {
         <Link href="/login" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
           Effettua il Login
         </Link>
+        <div style={{ marginTop: 10, fontSize: 12 }}>
+          <Link href="/contact" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Supporto e richieste dati</Link>
+        </div>
       </div>
     </div>
   );

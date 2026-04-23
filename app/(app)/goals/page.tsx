@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, Edit2, Trash2, Target, CalendarClock } from "lucide-react";
+import { Plus, Trash2, Target, CalendarClock } from "lucide-react";
 import { useSavingsGoals, useDeleteSavingsGoal } from "@/lib/supabase/hooks";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { MoneyValue } from "@/components/ui/MoneyValue";
 import { GoalDialog } from "@/components/goals/GoalDialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SavingsGoal } from "@/lib/types";
 import { differenceInDays, parseISO } from "date-fns";
 import { useI18n } from "@/lib/i18n/context";
@@ -145,14 +146,27 @@ export default function GoalsPage() {
 
   const [dialogOpen, setDialog] = useState(false);
   const [editing, setEditing]   = useState<SavingsGoal | null>(null);
+  const [confirmGoalId, setConfirmGoalId] = useState<string | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   const totalTargeted  = useMemo(() => goals.reduce((s, g) => s + g.target_amount, 0), [goals]);
   const totalSaved     = useMemo(() => goals.reduce((s, g) => s + g.current_amount, 0), [goals]);
   const overallPct     = totalTargeted > 0 ? Math.round((totalSaved / totalTargeted) * 100) : 0;
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t("goals.deleteConfirm"))) return;
-    await deleteGoal.mutateAsync(id);
+    setConfirmGoalId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmGoalId) return;
+
+    setConfirmLoading(true);
+    try {
+      await deleteGoal.mutateAsync(confirmGoalId);
+      setConfirmGoalId(null);
+    } finally {
+      setConfirmLoading(false);
+    }
   };
 
   if (isLoading) return (
@@ -164,7 +178,7 @@ export default function GoalsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="header-row goals-page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 700 }}>{t("goals.title")}</h1>
           <p style={{ color: "var(--text-secondary)", marginTop: 4 }}>
@@ -172,6 +186,7 @@ export default function GoalsPage() {
           </p>
         </div>
         <button
+          className="goals-primary-action"
           onClick={() => { setEditing(null); setDialog(true); }}
           style={{
             display: "flex", alignItems: "center", gap: 8,
@@ -187,12 +202,12 @@ export default function GoalsPage() {
       </div>
 
       {/* Summary banner */}
-      <div className="glass" style={{
+      <div className="glass goals-summary-banner" style={{
         padding: "20px 24px",
         background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(124,111,247,0.08))",
         display: "flex", justifyContent: "space-between", alignItems: "center",
       }}>
-        <div style={{ display: "flex", gap: 48 }}>
+        <div className="goals-summary-stats" style={{ display: "flex", gap: 48 }}>
           <div>
             <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("goals.totalSaved")}</div>
             <MoneyValue amount={totalSaved} size="2xl" color="var(--income-color)" />
@@ -215,14 +230,14 @@ export default function GoalsPage() {
       </div>
 
       {/* Goals grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
+      <div className="goals-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
         {goals.map((g, i) => (
           <div key={g.id} style={{ animationDelay: `${i * 0.07}s` }}>
             <GoalCard goal={g} onEdit={(g) => { setEditing(g); setDialog(true); }} onDelete={handleDelete} />
           </div>
         ))}
         {goals.length === 0 && (
-          <div className="glass" style={{ gridColumn: "span 2", padding: 60, textAlign: "center" }}>
+          <div className="glass goals-empty-state" style={{ gridColumn: "span 2", padding: 60, textAlign: "center" }}>
             <Target size={36} color="var(--text-muted)" style={{ margin: "0 auto 16px" }} />
             <div style={{ color: "var(--text-muted)" }}>{t("goals.empty")}</div>
           </div>
@@ -233,6 +248,18 @@ export default function GoalsPage() {
         open={dialogOpen}
         onClose={() => { setDialog(false); setEditing(null); }}
         initialData={editing}
+      />
+
+      <ConfirmDialog
+        open={confirmGoalId !== null}
+        title={t("common.delete")}
+        description={t("goals.deleteConfirm")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        intent="danger"
+        loading={confirmLoading}
+        onClose={() => { if (!confirmLoading) setConfirmGoalId(null); }}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

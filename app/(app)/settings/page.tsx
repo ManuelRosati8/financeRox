@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  User, Mail, Globe, Palette, Bell, LogOut, LogIn, Sun, Moon,
-  ChevronRight, Shield, CreditCard, Trash2, Save, Percent,
+  User, Mail, Globe, LogOut, LogIn, Sun, Moon,
+  ChevronRight, Shield, CreditCard, Trash2, Save,
 } from "lucide-react";
+import { AppSelect } from "@/components/ui/AppSelect";
 import { useTheme } from "@/lib/theme-context";
-import { MoneyValue } from "@/components/ui/MoneyValue";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useProfile } from "@/lib/supabase/hooks";
 import { createClient } from "@/lib/supabase/client";
-import { useEffect } from "react";
 import { useI18n } from "@/lib/i18n/context";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -69,8 +69,16 @@ export default function SettingsPage() {
   const [fullName, setFullName]   = useState("");
   const [email, setEmail]         = useState("utente@example.com");
   const [currency, setCurrency]   = useState("EUR");
-  const [taxRate, setTaxRate]     = useState("");
   const [saved, setSaved]         = useState(false);
+  const [dialogState, setDialogState] = useState<null | {
+    title: string;
+    description: string;
+    confirmLabel: string;
+    cancelLabel?: string | null;
+    intent?: "default" | "danger";
+    onConfirm?: () => Promise<void> | void;
+  }>(null);
+  const [dialogLoading, setDialogLoading] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -80,17 +88,12 @@ export default function SettingsPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (data?.user?.email) setEmail(data.user.email);
     });
-    // Load tax rate from localStorage
-    const stored = localStorage.getItem("financerox_tax_rate");
-    if (stored) setTaxRate(stored);
   }, [profile, supabase]);
 
   const handleSave = async () => {
     if (profile?.id) {
       await supabase.from('profiles').update({ full_name: fullName, currency }).eq('id', profile.id);
     }
-    // Persist tax rate in localStorage (no DB column required)
-    localStorage.setItem("financerox_tax_rate", taxRate);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -98,6 +101,26 @@ export default function SettingsPage() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = "/login";
+  };
+
+  const closeDialog = () => {
+    if (!dialogLoading) setDialogState(null);
+  };
+
+  const handleDialogConfirm = async () => {
+    if (!dialogState) return;
+    if (!dialogState.onConfirm) {
+      closeDialog();
+      return;
+    }
+
+    setDialogLoading(true);
+    try {
+      await dialogState.onConfirm();
+      setDialogState(null);
+    } finally {
+      setDialogLoading(false);
+    }
   };
 
   return (
@@ -143,20 +166,18 @@ export default function SettingsPage() {
         </SettingRow>
 
         <SettingRow icon={Globe} label={t("settings.currency")} description={t("settings.currencyNote")}>
-          <select
+          <AppSelect
+            options={[
+              { value: "EUR", label: t("settings.currencyEUR") },
+              { value: "USD", label: t("settings.currencyUSD") },
+              { value: "GBP", label: t("settings.currencyGBP") },
+              { value: "CHF", label: t("settings.currencyCHF") },
+            ]}
             value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            style={{
-              padding: "7px 12px", borderRadius: 8, fontSize: 13,
-              background: "var(--bg-subtle)", border: "1px solid var(--border)",
-              color: "var(--text-primary)", outline: "none", cursor: "pointer",
-            }}
-          >
-            <option value="EUR">{t("settings.currencyEUR")}</option>
-            <option value="USD">{t("settings.currencyUSD")}</option>
-            <option value="GBP">{t("settings.currencyGBP")}</option>
-            <option value="CHF">{t("settings.currencyCHF")}</option>
-          </select>
+            onChange={setCurrency}
+            wrapperStyle={{ width: 220 }}
+            selectStyle={{ minHeight: 36, padding: "7px 36px 7px 12px" }}
+          />
         </SettingRow>
 
         {/* Save button */}
@@ -175,59 +196,6 @@ export default function SettingsPage() {
             {saved ? t("common.saved") : t("common.save")}
           </button>
         </div>
-      </Section>
-
-      {/* ── Finanza ── */}
-      <Section title={t("settings.finance")}>
-        <SettingRow
-          icon={Percent}
-          label={t("settings.taxRate")}
-          description={t("settings.taxRateNote")}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              step="0.5"
-              value={taxRate}
-              onChange={(e) => {
-                const v = parseFloat(e.target.value);
-                if (!isNaN(v) && v >= 0 && v <= 100) setTaxRate(e.target.value);
-                else if (e.target.value === "") setTaxRate("");
-              }}
-              placeholder="es. 23"
-              style={{
-                padding: "7px 12px", borderRadius: 8, fontSize: 13,
-                background: "var(--bg-subtle)", border: "1px solid var(--border)",
-                color: "var(--text-primary)", outline: "none", width: 90,
-                fontFamily: "JetBrains Mono, monospace",
-              }}
-            />
-            <span style={{ fontSize: 13, color: "var(--text-muted)" }}>%</span>
-          </div>
-        </SettingRow>
-        {taxRate && parseFloat(taxRate) > 0 && (
-          <div style={{
-            marginTop: 4, padding: "10px 14px", borderRadius: 10,
-            background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.15)",
-            fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.65,
-          }}>
-            💡 Con aliquota{" "}
-            <strong style={{ color: "var(--accent)", fontFamily: "JetBrains Mono, monospace" }}>
-              {taxRate}%
-            </strong>
-            , su uno stipendio di <strong style={{ fontFamily: "JetBrains Mono, monospace" }}>€ 2.000</strong>
-            {" "}verranno accantonati{" "}
-            <strong style={{ color: "var(--accent)", fontFamily: "JetBrains Mono, monospace" }}>
-              € {(2000 * parseFloat(taxRate) / 100).toFixed(0)}
-            </strong>
-            {" "}di tasse — il Safe to Spend mostrerà solo le restanti{" "}
-            <strong style={{ fontFamily: "JetBrains Mono, monospace" }}>
-              € {(2000 * (1 - parseFloat(taxRate) / 100)).toFixed(0)}
-            </strong>.
-          </div>
-        )}
       </Section>
 
       <Section title={t("settings.appearance")}>
@@ -284,7 +252,13 @@ export default function SettingsPage() {
           description={t("settings.changePasswordNote")}
         >
           <button
-            onClick={() => { alert(t("settings.resetStub")); }}
+            onClick={() => {
+              setDialogState({
+                title: t("settings.changePassword"),
+                description: t("settings.resetStub"),
+                confirmLabel: t("common.close"),
+              });
+            }}
             style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "7px 14px", borderRadius: 8, border: "1px solid var(--border)",
@@ -326,7 +300,13 @@ export default function SettingsPage() {
           description={t("settings.loginRegisterNote")}
         >
           <button
-            onClick={() => { alert("Pagine auth in arrivo"); }}
+            onClick={() => {
+              setDialogState({
+                title: t("settings.loginRegister"),
+                description: t("settings.authPagesStub"),
+                confirmLabel: t("common.close"),
+              });
+            }}
             style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "7px 14px", borderRadius: 8,
@@ -368,9 +348,21 @@ export default function SettingsPage() {
         >
           <button
             onClick={() => {
-              if (confirm(t("settings.deleteConfirm"))) {
-                alert(t("settings.deleteStub"));
-              }
+              setDialogState({
+                title: t("settings.deleteAccount"),
+                description: t("settings.deleteConfirm"),
+                confirmLabel: t("common.delete"),
+                cancelLabel: t("common.cancel"),
+                intent: "danger",
+                onConfirm: () => {
+                  setDialogState({
+                    title: t("settings.deleteAccount"),
+                    description: t("settings.deleteStub"),
+                    confirmLabel: t("common.close"),
+                    intent: "danger",
+                  });
+                },
+              });
             }}
             style={{
               padding: "7px 14px", borderRadius: 8,
@@ -388,6 +380,18 @@ export default function SettingsPage() {
       <div style={{ textAlign: "center", padding: "8px 0 24px", fontSize: 11, color: "var(--text-muted)" }}>
         {t("settings.version")}
       </div>
+
+      <ConfirmDialog
+        open={dialogState !== null}
+        title={dialogState?.title || ""}
+        description={dialogState?.description}
+        confirmLabel={dialogState?.confirmLabel || t("common.confirm")}
+        cancelLabel={dialogState?.cancelLabel}
+        intent={dialogState?.intent || "default"}
+        loading={dialogLoading}
+        onClose={closeDialog}
+        onConfirm={handleDialogConfirm}
+      />
     </div>
   );
 }

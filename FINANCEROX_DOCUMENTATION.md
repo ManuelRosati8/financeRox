@@ -1,8 +1,9 @@
 # Documentazione Completa - financeRox
 
-> **Versione 2.1** — Ultimo aggiornamento: Giugno 2026  
+> **Versione 2.2** — Ultimo aggiornamento: Aprile 2026  
+> Changelog v2.2: sezione dashboard "Scenario Lab" in beta con empty state "stiamo arrivando", calendario Future Self aggiornato per combinare transazioni reali del mese e ricorrenze proiettate senza duplicati, documentazione Supabase/allineamento roadmap.  
 > Changelog v2.1: Categorie pill nel form transazioni, strip persuasiva landing page, logo sidebar ingrandito, sezione deploy espansa con Supabase Table Editor e verifica post-deploy.  
-> Changelog v2: Landing Page premium, rimozione paywall Stripe (Testing Mode), Smart Tags, Lifestyle Inflation widget, Pianificatore Tasse, Running Balance Calendario.
+> Changelog v2: Landing Page premium, rimozione paywall Stripe (Testing Mode), Lifestyle Inflation widget, Pianificatore Tasse, Running Balance Calendario.
 
 Questo documento contiene tutte le istruzioni necessarie per lanciare, testare e deployare (pubblicare) l'applicazione **financeRox**, nonché un prompt dettagliato per rigenerare l'architettura da zero con un'altra Intelligenza Artificiale.
 
@@ -104,7 +105,8 @@ Dopo il primo deploy, verifica che tutto funzioni:
 - [ ] Il login reindirizza correttamente alla `/dashboard`
 - [ ] Aggiungere una transazione la salva nel **Table Editor** di Supabase (`transactions`)
 - [ ] La dashboard mostra i valori corretti (entrate/uscite/saldo)
-- [ ] Il calendario in Future Self mostra gli eventi ricorrenti
+- [ ] Il calendario in Future Self mostra sia le transazioni reali del mese sia le ricorrenze fisse proiettate sulle date corrette
+- [ ] Le entrate ricorrenti fisse (es. stipendio) compaiono nel giorno corretto del calendario senza duplicazioni
 - [ ] Su mobile la navbar inferiore è visibile e navigabile
 - [ ] Il logout funziona e reindirizza alla landing
 
@@ -198,7 +200,7 @@ La sezione "Future Self" contiene un paywall mockato per bloccare alcune funzion
 ### 4.1 Landing Page Premium (`app/page.tsx`)
 - **Server component** che verifica la sessione Supabase lato server.
 - Render differenziale: se l'utente è loggato mostra CTA "Vai alla Dashboard"; altrimenti mostra la landing completa.
-- Sezioni: Header sticky (logo/nav/CTA), Hero con gradiente arancione + mockup app interattivo, Bento Grid 12-colonne con 7 feature card (Dashboard, Safe to Spend, Future Self PRO, Calendario PRO, Smart Tags, Lifestyle Inflation, Pianificatore Tasse), Stats row, Final CTA, Footer.
+- Sezioni: Header sticky (logo/nav/CTA), Hero con gradiente arancione + mockup app interattivo, Bento Grid 12-colonne con 7 feature card (Dashboard, Safe to Spend, Future Self PRO, Calendario PRO, Lifestyle Inflation, Pianificatore Tasse), Stats row, Final CTA, Footer.
 - Nessuna dipendenza client / ReactQuery — puro HTML server-side.
 
 ### 4.2 Rimozione Paywall Stripe (Testing Mode)
@@ -221,23 +223,17 @@ La sezione "Future Self" contiene un paywall mockato per bloccare alcune funzion
 - Preview dinamica: mostra l'importo di tasse calcolato su €2.000 di esempio.
 - Sezione dedicata "Finanza" nell'interfaccia Impostazioni.
 
-### 4.5 Smart Tags nelle Transazioni
-- **`lib/types.ts`**: aggiunta property `tags?: string[]` all'interfaccia `Transaction` (documentazione).
-- **Implementazione "hashtag-in-description"**: i tag vengono memorizzati come token `#nomtag` appendati alla descrizione — nessuna colonna DB aggiuntiva richiesta.
-- **`components/transactions/TransactionDialog.tsx`**: 
-  - Form arricchito con input tag stile "chip" (Spazio/Invio per aggiungere, Backspace per rimuovere).
-  - Al salvataggio i tag vengono appendati alla descrizione: `"Spesa supermerc. #vacanze2024"`.
-  - In modalità edit, i tag vengono estratti e mostrati già come chip.
-- **`app/(app)/transactions/page.tsx`**: 
-  - Le chip tag sono cliccabili nelle righe della tabella → attiva filtro istantaneo.
-  - Filtro tag attivo mostra un badge dismiss visibile nella barra filtri.
-  - `filtered` useMemo aggiornato per includere `matchTag`.
-
-### 4.6 Running Balance Calendario (già implementato, documentato)
+### 4.5 Running Balance Calendario
 - `components/calendar/FutureCalendar.tsx`: calcola il saldo cumulativo giorno per giorno a partire dal saldo corrente.
 - I giorni con saldo negativo mostrano bordo rosso + dot rosso.
 - Le celle del giorno sono cliccabili per pre-riempire la data nel form nuova transazione.
-- Deduplicazione ricorrenze per description per evitare double-counting.
+- Il calendario unisce due sorgenti: transazioni reali del mese e ricorrenze fisse proiettate sui giorni futuri/attivi.
+- Le ricorrenze vengono deduplicate con una chiave stabile che include tipo, importo, intervallo, descrizione e giorno di partenza, evitando collisioni tra piu entrate fisse con descrizioni simili.
+
+### 4.6 Scenario Lab Dashboard (beta preview)
+- La dashboard include un pannello "Scenario Lab" in beta con empty state "Stiamo arrivando".
+- Il widget mostra il contesto reale gia disponibile nell'app: saldo attuale, entrate del mese, numero di ricorrenze attive e obiettivi tracciati.
+- La roadmap prevista per questo pannello comprende simulazioni future di rendimento e confronti ipotetici, ma al momento non eroga consigli finanziari automatici.
 
 ### 4.7 Tipo Profile aggiornato (`lib/types.ts`)
 - `Profile.tax_rate?: number` — percentuale aliquota fiscale personale.

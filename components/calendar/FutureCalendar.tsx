@@ -1,6 +1,6 @@
 ﻿import { useMemo, useState } from "react";
 import { 
-  startOfMonth, endOfMonth, eachDayOfInterval, getDay, format, parseISO, isSameDay, addMonths
+  startOfMonth, endOfMonth, eachDayOfInterval, getDay, format, parseISO, isSameDay, addMonths, isValid
 } from "date-fns";
 import { it } from "date-fns/locale";
 import { X, Plus, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from "lucide-react";
@@ -12,26 +12,81 @@ interface Props {
   currentBalance?: number;
 }
 
+function parseTransactionDate(dateString: string) {
+  const parsed = parseISO(dateString);
+  return isValid(parsed) ? parsed : null;
+}
+
+function normalizeRecurringKey(transaction: Transaction, parsedDate: Date) {
+  return [
+    transaction.type,
+    transaction.interval ?? "once",
+    transaction.amount,
+    transaction.description.trim().toLowerCase(),
+    parsedDate.getDate(),
+    transaction.recurring_end ?? "open",
+  ].join("|");
+}
+
+function normalizeDaySignature(transaction: Transaction, dayKey: string) {
+  return [
+    dayKey,
+    transaction.type,
+    transaction.amount,
+    transaction.description.trim().toLowerCase(),
+  ].join("|");
+}
+
 export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }: Props) {
   const [monthOffset, setMonthOffset] = useState(0);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const safeCurrentBalance = Number.isFinite(currentBalance) ? currentBalance : 0;
 
-  // Compute the viewed month (stable base = first of current month + offset)
-  const viewDate = useMemo(() => {
+  const viewDateMs = useMemo(() => {
     const base = new Date();
     base.setDate(1);
-    return addMonths(base, monthOffset);
+    return addMonths(base, monthOffset).getTime();
   }, [monthOffset]);
 
-  const monthStart = startOfMonth(viewDate);
-  const monthEnd   = endOfMonth(viewDate);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  // Compute the viewed month (stable base = first of current month + offset)
+  const viewDate = new Date(viewDateMs);
+  const monthStartMs = useMemo(() => startOfMonth(new Date(viewDateMs)).getTime(), [viewDateMs]);
+  const monthEndMs = useMemo(() => endOfMonth(new Date(viewDateMs)).getTime(), [viewDateMs]);
+  const monthStart = new Date(monthStartMs);
+
+  const daysInMonth = useMemo(
+    () => eachDayOfInterval({ start: new Date(monthStartMs), end: new Date(monthEndMs) }),
+    [monthStartMs, monthEndMs]
+  );
+
+  const actualMonthTransactions = useMemo(() => {
+    const map = new Map<string, Transaction[]>();
+
+    transactions.forEach((transaction) => {
+      const parsedDate = parseTransactionDate(transaction.date);
+      if (!parsedDate) return;
+
+      const time = parsedDate.getTime();
+      if (time < monthStartMs || time > monthEndMs) return;
+
+      const dayKey = format(parsedDate, "yyyy-MM-dd");
+      const current = map.get(dayKey) || [];
+      current.push(transaction);
+      map.set(dayKey, current);
+    });
+
+    return map;
+  }, [transactions, monthStartMs, monthEndMs]);
 
   // 1. Unique active recurring transactions
   const activeRecurring = useMemo(() => {
     const map = new Map<string, Transaction>();
-    transactions.filter(t => t.is_recurring).forEach(t => {
-      if (!map.has(t.description)) map.set(t.description, t);
+    transactions.filter(t => t.is_recurring && !!t.interval).forEach(t => {
+      const parsedDate = parseTransactionDate(t.date);
+      if (!parsedDate) return;
+
+      const key = normalizeRecurringKey(t, parsedDate);
+      if (!map.has(key)) map.set(key, t);
     });
     return Array.from(map.values());
   }, [transactions]);
@@ -39,28 +94,55 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
   // 2. Map day â†’ expected recurring transactions for the viewed month
   const dayMap = useMemo(() => {
     const map = new Map<string, Transaction[]>();
-    daysInMonth.forEach(day => {
+    const seenSignatures = new Set<string>();
+    const monthDays = eachDayOfInterval({ start: new Date(monthStartMs), end: new Date(monthEndMs) });
+    const monthEndDate = new Date(monthEndMs);
+
+    actualMonthTransactions.forEach((dayTransactions, dayKey) => {
+      map.set(dayKey, [...dayTransactions]);
+      dayTransactions.forEach((transaction) => {
+        seenSignatures.add(normalizeDaySignature(transaction, dayKey));
+      });
+    });
+
+    monthDays.forEach(day => {
       const dayStr = format(day, "yyyy-MM-dd");
-      const expected: Transaction[] = [];
+      const expected = map.get(dayStr) || [];
+
       activeRecurring.forEach(t => {
-        const txDate = parseISO(t.date);
+        const txDate = parseTransactionDate(t.date);
+        if (!txDate) return;
+
+        if (day < txDate) return;
+
+        const recurringEnd = t.recurring_end ? parseTransactionDate(t.recurring_end) : null;
+        if (recurringEnd && day > recurringEnd) return;
+
         let matches = false;
         if (t.interval === "daily") {
           matches = true;
         } else if (t.interval === "weekly") {
           matches = getDay(day) === getDay(txDate);
         } else if (t.interval === "monthly") {
-          const targetDay = Math.min(txDate.getDate(), monthEnd.getDate());
+          const targetDay = Math.min(txDate.getDate(), monthEndDate.getDate());
           matches = day.getDate() === targetDay;
         } else if (t.interval === "yearly") {
           matches = day.getMonth() === txDate.getMonth() && day.getDate() === txDate.getDate();
         }
-        if (matches) expected.push(t);
+
+        if (!matches) return;
+
+        const signature = normalizeDaySignature(t, dayStr);
+        if (seenSignatures.has(signature)) return;
+
+        expected.push(t);
+        seenSignatures.add(signature);
       });
+
       if (expected.length > 0) map.set(dayStr, expected);
     });
     return map;
-  }, [activeRecurring, daysInMonth, monthEnd]);
+  }, [activeRecurring, actualMonthTransactions, monthStartMs, monthEndMs]);
 
   // Calendar grid padding â€” Monday first (Italian locale)
   const startDay = getDay(monthStart);
@@ -71,7 +153,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
   // For offset=0: use currentBalance as-is (projecting from today within the month)
   // For other offsets: approximate by applying the monthly net recurring for each offset step
   const estimatedMonthStartBalance = useMemo(() => {
-    if (monthOffset === 0) return currentBalance;
+    if (monthOffset === 0) return safeCurrentBalance;
     const monthlyNet = activeRecurring.reduce((s, t) => {
       if (!t.interval) return s;
       const sign = t.type === "income" ? 1 : -1;
@@ -81,8 +163,8 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
       if (t.interval === "daily")   return s + sign * (t.amount * 30);
       return s;
     }, 0);
-    return currentBalance + monthlyNet * monthOffset;
-  }, [monthOffset, currentBalance, activeRecurring]);
+    return safeCurrentBalance + monthlyNet * monthOffset;
+  }, [monthOffset, safeCurrentBalance, activeRecurring]);
 
   // Running balance across viewed month's days
   const runningBalances = useMemo(() => {
@@ -90,8 +172,9 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
     const map = new Map<string, number>();
     const todayMidnight = new Date();
     todayMidnight.setHours(0, 0, 0, 0);
+    const monthDays = eachDayOfInterval({ start: new Date(monthStartMs), end: new Date(monthEndMs) });
 
-    daysInMonth.forEach(day => {
+    monthDays.forEach(day => {
       const dayStr = format(day, "yyyy-MM-dd");
       // Current month: only project from today onward
       if (monthOffset === 0 && day < todayMidnight) return;
@@ -104,7 +187,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
       map.set(dayStr, bal);
     });
     return map;
-  }, [daysInMonth, dayMap, estimatedMonthStartBalance, monthOffset]);
+  }, [dayMap, estimatedMonthStartBalance, monthOffset, monthStartMs, monthEndMs]);
 
   // Detail panel data
   const selectedDayTxs     = selectedDay ? (dayMap.get(selectedDay) || []) : [];
@@ -114,15 +197,14 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
   const fmt = (n: number) =>
     new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(n);
 
-  const isCurrentMonth = monthOffset === 0;
   const isFutureMonth  = monthOffset > 0;
 
   return (
-    <div className="glass" style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+    <div className="glass future-calendar" style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
       {/* â”€â”€ Header with month navigation â”€â”€ */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="future-calendar-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2 style={{ fontSize: 16, fontWeight: 600 }}>Calendario</h2>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="future-calendar-controls" style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <button
             onClick={() => { setMonthOffset(o => o - 1); setSelectedDay(null); }}
             style={{
@@ -149,7 +231,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
                   onClick={() => { setMonthOffset(0); setSelectedDay(null); }}
                   style={{ marginLeft: 6, background: "none", border: "none", cursor: "pointer", color: "var(--accent)", fontSize: 10, fontWeight: 600, padding: 0 }}
                 >
-                  â† Oggi
+                  {"<- Oggi"}
                 </button>
               </div>
             )}
@@ -193,7 +275,8 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
       )}
 
       {/* â”€â”€ Calendar Grid â”€â”€ */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, textAlign: "center" }}>
+      <div className="future-calendar-grid-scroll">
+      <div className="future-calendar-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, textAlign: "center" }}>
         {WEEKDAYS.map(wd => (
           <div key={wd} style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", paddingBottom: 4 }}>
             {wd}
@@ -219,6 +302,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
             <div
               key={dayStr}
               onClick={() => setSelectedDay(selectedDay === dayStr ? null : dayStr)}
+              className="future-calendar-day"
               style={{
                 minHeight: 78,
                 background: isSelected
@@ -310,16 +394,17 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
           );
         })}
       </div>
+      </div>
 
       {/* â”€â”€ Day Detail Panel â”€â”€ */}
       {selectedDay && selectedDayDate && (
-        <div style={{
+        <div className="future-calendar-detail" style={{
           marginTop: 4, padding: "20px 22px", borderRadius: 12,
           background: "var(--bg-elevated)", border: "1px solid var(--accent-border)",
           display: "flex", flexDirection: "column", gap: 14,
           animation: "fadeUp 0.15s ease both",
         }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div className="future-calendar-detail-top" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <span style={{ fontSize: 15, fontWeight: 700, textTransform: "capitalize" }}>
                 {format(selectedDayDate, "EEEE d MMMM", { locale: it })}
@@ -330,11 +415,11 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
                   <span style={{ fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: selectedDayBalance < 0 ? "var(--expense-color)" : "var(--income-color)" }}>
                     {fmt(selectedDayBalance)}
                   </span>
-                  {selectedDayBalance < 0 && <span style={{ marginLeft: 8, fontSize: 11, color: "var(--expense-color)", fontWeight: 600 }}>âš ï¸ Scoperto!</span>}
+                  {selectedDayBalance < 0 && <span style={{ marginLeft: 8, fontSize: 11, color: "var(--expense-color)", fontWeight: 600 }}>Scoperto!</span>}
                 </div>
               )}
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div className="future-calendar-detail-actions" style={{ display: "flex", gap: 8 }}>
               <button
                 onClick={() => onDayClick?.(selectedDay!)}
                 style={{
@@ -347,6 +432,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
               </button>
               <button
                 onClick={() => setSelectedDay(null)}
+                type="button"
                 style={{ background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)", borderRadius: 8, cursor: "pointer", padding: "7px 10px", color: "var(--text-muted)" }}
               >
                 <X size={14} />
@@ -357,14 +443,13 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
           {selectedDayTxs.length === 0 ? (
             <div style={{ padding: "16px 0", textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
               Nessuna ricorrenza prevista.{" "}
-              <span style={{ fontSize: 12 }}>Usa "Nuova Transazione" per aggiungerne una.</span>
+              <span style={{ fontSize: 12 }}>Usa &quot;Nuova Transazione&quot; per aggiungerne una.</span>
             </div>
           ) : (
             <>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {selectedDayTxs.map((t, i) => {
                   const cleanDesc = t.description.replace(/#[\w\u00C0-\u017F]+/g, "").trim();
-                  const txTags = t.description.match(/#[\w\u00C0-\u017F]+/g) || [];
                   return (
                     <div key={i} style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -387,18 +472,13 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
                           <div style={{ fontSize: 13, fontWeight: 600 }}>{cleanDesc || t.description}</div>
                           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2, flexWrap: "wrap" }}>
                             <span style={{ fontSize: 10, color: "var(--text-muted)" }}>
-                              ðŸ” {t.interval === "monthly" ? "mensile" : t.interval === "weekly" ? "settimanale" : t.interval === "yearly" ? "annuale" : "giornaliero"}
+                              Ricorrenza {t.interval === "monthly" ? "mensile" : t.interval === "weekly" ? "settimanale" : t.interval === "yearly" ? "annuale" : "giornaliera"}
                             </span>
                             {t.category && (
                               <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 99, background: `${t.category.color}18`, color: t.category.color, fontWeight: 600 }}>
                                 {t.category.name}
                               </span>
                             )}
-                            {txTags.map(tag => (
-                              <span key={tag} style={{ fontSize: 10, padding: "1px 6px", borderRadius: 99, background: "rgba(139,92,246,0.12)", color: "#a78bfa", fontWeight: 600 }}>
-                                {tag}
-                              </span>
-                            ))}
                           </div>
                         </div>
                       </div>
@@ -437,7 +517,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
       )}
 
       {/* Legend */}
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", paddingTop: 4, borderTop: "1px solid var(--border-subtle)" }}>
+      <div className="future-calendar-legend" style={{ display: "flex", gap: 16, flexWrap: "wrap", paddingTop: 4, borderTop: "1px solid var(--border-subtle)" }}>
         {[
           { dot: "var(--income-color)", label: "Entrata ricorrente" },
           { dot: "var(--expense-color)", label: "Uscita ricorrente" },
@@ -447,7 +527,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
             <span style={{ width: 8, height: 8, borderRadius: 2, background: dot, display: "inline-block" }} />{label}
           </span>
         ))}
-        <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--text-muted)" }}>Clicca un giorno per i dettagli</span>
+        <span className="future-calendar-legend-note" style={{ marginLeft: "auto", fontSize: 11, color: "var(--text-muted)" }}>Clicca un giorno per i dettagli</span>
       </div>
     </div>
   );

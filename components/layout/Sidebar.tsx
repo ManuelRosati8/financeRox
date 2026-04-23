@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp,
   Settings, Sun, Moon, LogOut, Globe,
 } from "lucide-react";
+import { BrandWordmark } from "@/components/ui/BrandWordmark";
 import { useTheme } from "@/lib/theme-context";
 import { useProfile } from "@/lib/supabase/hooks";
 import { createClient } from "@/lib/supabase/client";
@@ -51,10 +51,12 @@ export function Sidebar() {
     <aside
       className="sidebar-desktop"
       style={{
+        display: "flex",
         width: 230,
         minHeight: "100vh",
         background: "var(--bg-surface)",
         borderRight: "1px solid var(--border-subtle)",
+        justifyContent: "space-between",
         flexDirection: "column",
         padding: "22px 14px",
         gap: 6,
@@ -64,50 +66,47 @@ export function Sidebar() {
         transition: "background 0.25s ease, border-color 0.25s ease",
       }}
     >
-      {/* Logo */}
-      <div style={{ padding: "0 4px 20px" }}>
-        <Link href="/dashboard" style={{ textDecoration: "none", display: "block" }}>
-          <Image
-            src={theme === "dark" ? "/financeRox_logoBlack.jpg" : "/financeRox_logo.jpg"}
-            alt="financeRox"
-            width={300}
-            height={80}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "stretch" }}>
+        {/* Logo */}
+        <div style={{ padding: "0 4px 20px" }}>
+          <Link
+            href="/dashboard"
             style={{
-              objectFit: "contain",
-              width: "100%",
-              height: "auto",
-              maxHeight: 80,
-              display: "block",
-              mixBlendMode: theme === "dark" ? "screen" : "multiply",
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              minHeight: 42,
+              padding: "4px 6px",
             }}
-            priority
-          />
-        </Link>
-      </div>
+          >
+            <BrandWordmark size={32} />
+          </Link>
+        </div>
 
-      {/* Nav */}
-      <nav style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1 }}>
-        {navItems.map(({ href, labelKey, icon: Icon }) => {
-          const active = pathname.startsWith(href);
-          return (
-            <Link
-              key={href} href={href}
-              style={{
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 12px", borderRadius: 10, textDecoration: "none",
-                fontWeight: active ? 600 : 400, fontSize: 13,
-                color: active ? "var(--text-primary)" : "var(--text-secondary)",
-                background: active ? "var(--accent-dim)" : "transparent",
-                border: active ? "1px solid rgba(124,111,247,0.2)" : "1px solid transparent",
-                transition: "all 0.15s ease",
-              }}
-            >
-              <Icon size={17} style={{ stroke: active ? "var(--accent)" : "var(--text-muted)" }} />
-              {t(labelKey)}
-            </Link>
-          );
-        })}
-      </nav>
+        {/* Nav */}
+        <nav style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          {navItems.map(({ href, labelKey, icon: Icon }) => {
+            const active = pathname.startsWith(href);
+            return (
+              <Link
+                key={href} href={href}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "10px 12px", borderRadius: 10, textDecoration: "none",
+                  fontWeight: active ? 600 : 400, fontSize: 13,
+                  color: active ? "var(--text-primary)" : "var(--text-secondary)",
+                  background: active ? "var(--accent-dim)" : "transparent",
+                  border: active ? "1px solid rgba(124,111,247,0.2)" : "1px solid transparent",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <Icon size={17} style={{ stroke: active ? "var(--accent)" : "var(--text-muted)" }} />
+                {t(labelKey)}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
 
       {/* Bottom controls */}
       <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 14, display: "flex", flexDirection: "column", gap: 4 }}>

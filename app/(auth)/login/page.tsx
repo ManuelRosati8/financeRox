@@ -53,6 +53,9 @@ export default function LoginPage() {
         </div>
         <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 8 }}>Bentornato!</h1>
         <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>Accedi a financeRox per gestire le tue finanze.</p>
+        <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 10, lineHeight: 1.7 }}>
+          L'accesso usa autenticazione gestita su Supabase. Consulta <Link href="/privacy" style={{ color: "var(--accent)", textDecoration: "none" }}>Privacy Policy</Link>, <Link href="/terms" style={{ color: "var(--accent)", textDecoration: "none" }}>Termini</Link> e <Link href="/contact" style={{ color: "var(--accent)", textDecoration: "none" }}>Contatti</Link> se hai richieste su account o dati.
+        </p>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>

@@ -24,8 +24,6 @@ export interface Transaction {
   interval: RecurringInterval | null;
   recurring_end: string | null;
   status: 'confirmed' | 'planned';
-  /** Smart Tags — stored as #hashtag tokens appended to description */
-  tags?: string[];
   created_at: string;
 }
 

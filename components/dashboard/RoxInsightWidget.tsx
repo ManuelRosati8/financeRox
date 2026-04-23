@@ -182,10 +182,10 @@ export function RoxInsightWidget({ transactions, categories }: Props) {
                 color: "white", verticalAlign: "middle", letterSpacing: "0.06em",
               }}
             >
-              PRO
+              BETA
             </span>
           </div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Analisi automatica delle tue finanze</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Analisi automatica delle tue finanze in beta preview</div>
         </div>
       </div>
 

@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Globe, Sun, Moon, ArrowRight } from "lucide-react";
+import { BrandWordmark } from "@/components/ui/BrandWordmark";
 import { useTheme } from "@/lib/theme-context";
 import { useI18n } from "@/lib/i18n/context";
 
@@ -40,14 +40,7 @@ export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
         {/* Logo */}
         <div style={{ display: "flex", alignItems: "center" }}>
           <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
-            <Image
-              src={isDark ? "/financeRox_logoBlack.jpg" : "/financeRox_logo.jpg"}
-              alt="financeRox"
-              width={160}
-              height={42}
-              style={{ objectFit: "contain", height: 38, width: "auto" }}
-              priority
-            />
+            <BrandWordmark size={30} />
           </Link>
         </div>
 
