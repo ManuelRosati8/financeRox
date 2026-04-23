@@ -15,7 +15,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -39,10 +39,15 @@ export async function updateSession(request: NextRequest) {
     url.pathname.startsWith('/register') ||
     url.pathname.startsWith('/auth')
 
+  const isPublicInfoRoute =
+    url.pathname.startsWith('/privacy') ||
+    url.pathname.startsWith('/terms') ||
+    url.pathname.startsWith('/contact')
+
   // The root landing page is always public
   const isLandingPage = url.pathname === '/'
 
-  if (!user && !isAuthRoute && !isLandingPage) {
+  if (!user && !isAuthRoute && !isPublicInfoRoute && !isLandingPage) {
     // Redirect unauthenticated users trying to access protected app routes to login
     url.pathname = '/login'
     return NextResponse.redirect(url)

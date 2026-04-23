@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   User, Mail, Globe, LogOut, LogIn, Sun, Moon,
   ChevronRight, Shield, CreditCard, Trash2, Save,
@@ -60,6 +61,7 @@ function SettingRow({
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const { data: profile } = useProfile();
   const supabase = createClient();
@@ -70,6 +72,7 @@ export default function SettingsPage() {
   const [email, setEmail]         = useState("utente@example.com");
   const [currency, setCurrency]   = useState("EUR");
   const [saved, setSaved]         = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [dialogState, setDialogState] = useState<null | {
     title: string;
     description: string;
@@ -86,6 +89,7 @@ export default function SettingsPage() {
       if (profile.currency) setCurrency(profile.currency);
     }
     supabase.auth.getUser().then(({ data }) => {
+      setIsAuthenticated(Boolean(data?.user));
       if (data?.user?.email) setEmail(data.user.email);
     });
   }, [profile, supabase]);
@@ -283,97 +287,86 @@ export default function SettingsPage() {
       </Section>
 
       <Section title={t("settings.session")}>
-        {/* Demo note */}
-        <div style={{
-          padding: "12px 14px", borderRadius: 10, marginBottom: 4,
-          background: "rgba(124,111,247,0.06)", border: "1px solid rgba(124,111,247,0.15)",
-          fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.7,
-        }}>
-          🔐 <strong style={{ color: "var(--accent-purple)" }}>{t("settings.authNoteBold")}</strong>{" "}
-          {t("settings.authNote")}{" "}
-          {t("settings.authWalkthrough")}.
-        </div>
-
-        <SettingRow
-          icon={LogIn}
-          label={t("settings.loginRegister")}
-          description={t("settings.loginRegisterNote")}
-        >
-          <button
-            onClick={() => {
-              setDialogState({
-                title: t("settings.loginRegister"),
-                description: t("settings.authPagesStub"),
-                confirmLabel: t("common.close"),
-              });
-            }}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "7px 14px", borderRadius: 8,
-              background: "linear-gradient(135deg, var(--accent), var(--accent-hover))",
-              color: "white", border: "none",
-              fontSize: 13, fontWeight: 600, cursor: "pointer",
-            }}
+        {isAuthenticated === false && (
+          <SettingRow
+            icon={LogIn}
+            label={t("settings.loginRegister")}
+            description={t("settings.loginRegisterNote")}
           >
-            {t("settings.loginRegisterBtn")}
-          </button>
-        </SettingRow>
+            <button
+              onClick={() => router.push("/login")}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "7px 14px", borderRadius: 8,
+                background: "linear-gradient(135deg, var(--accent), var(--accent-hover))",
+                color: "white", border: "none",
+                fontSize: 13, fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              {t("settings.loginRegisterBtn")}
+            </button>
+          </SettingRow>
+        )}
 
-        <SettingRow
-          icon={LogOut}
-          label={t("settings.logoutLabel")}
-          description={t("settings.logoutNote")}
-          danger
-        >
-          <button
-            onClick={handleLogout}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "7px 14px", borderRadius: 8,
-              border: "1px solid rgba(244,63,94,0.3)",
-              background: "rgba(244,63,94,0.08)", color: "var(--expense-color)",
-              fontSize: 13, fontWeight: 500, cursor: "pointer",
-            }}
-          >
-            <LogOut size={13} />
-            {t("settings.logoutBtn")}
-          </button>
-        </SettingRow>
+        {isAuthenticated && (
+          <>
+            <SettingRow
+              icon={LogOut}
+              label={t("settings.logoutLabel")}
+              description={t("settings.logoutNote")}
+              danger
+            >
+              <button
+                onClick={handleLogout}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "7px 14px", borderRadius: 8,
+                  border: "1px solid rgba(244,63,94,0.3)",
+                  background: "rgba(244,63,94,0.08)", color: "var(--expense-color)",
+                  fontSize: 13, fontWeight: 500, cursor: "pointer",
+                }}
+              >
+                <LogOut size={13} />
+                {t("settings.logoutBtn")}
+              </button>
+            </SettingRow>
 
-        <SettingRow
-          icon={Trash2}
-          label={t("settings.deleteAccount")}
-          description={t("settings.deleteAccountNote")}
-          danger
-        >
-          <button
-            onClick={() => {
-              setDialogState({
-                title: t("settings.deleteAccount"),
-                description: t("settings.deleteConfirm"),
-                confirmLabel: t("common.delete"),
-                cancelLabel: t("common.cancel"),
-                intent: "danger",
-                onConfirm: () => {
+            <SettingRow
+              icon={Trash2}
+              label={t("settings.deleteAccount")}
+              description={t("settings.deleteAccountNote")}
+              danger
+            >
+              <button
+                onClick={() => {
                   setDialogState({
                     title: t("settings.deleteAccount"),
-                    description: t("settings.deleteStub"),
-                    confirmLabel: t("common.close"),
+                    description: t("settings.deleteConfirm"),
+                    confirmLabel: t("common.delete"),
+                    cancelLabel: t("common.cancel"),
                     intent: "danger",
+                    onConfirm: () => {
+                      setDialogState({
+                        title: t("settings.deleteAccount"),
+                        description: t("settings.deleteStub"),
+                        confirmLabel: t("common.close"),
+                        intent: "danger",
+                      });
+                    },
                   });
-                },
-              });
-            }}
-            style={{
-              padding: "7px 14px", borderRadius: 8,
-              border: "1px solid rgba(244,63,94,0.3)",
-              background: "transparent", color: "var(--expense-color)",
-              fontSize: 13, cursor: "pointer",
-            }}
-          >
-            {t("settings.deleteAccountBtn")}
-          </button>
-        </SettingRow>
+                }}
+                style={{
+                  padding: "7px 14px", borderRadius: 8,
+                  border: "1px solid rgba(244,63,94,0.3)",
+                  background: "transparent", color: "var(--expense-color)",
+                  fontSize: 13, cursor: "pointer",
+                }}
+              >
+                {t("settings.deleteAccountBtn")}
+              </button>
+            </SettingRow>
+          </>
+        )}
       </Section>
 
       {/* Version */}
