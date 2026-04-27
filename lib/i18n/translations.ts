@@ -196,6 +196,10 @@ export const translations = {
     "login.submitting": "Accesso in corso...",
     "login.noAccount": "Non hai ancora un account?",
     "login.registerLink": "Registrati qui",
+    "login.authInfo": "L'accesso usa autenticazione gestita su Supabase. Consulta",
+    "login.resetNeedEmail": "Inserisci prima la tua email per ricevere il link di recupero password.",
+    "login.resetSent": "Ti abbiamo inviato un'email con il link per reimpostare la password.",
+    "login.resetSending": "Invio link...",
 
     // Register
     "register.title": "Crea Account",
@@ -210,6 +214,25 @@ export const translations = {
     "register.submitting": "Creazione in corso...",
     "register.hasAccount": "Hai già un account?",
     "register.loginLink": "Effettua il Login",
+    "register.authInfo": "I dati di registrazione e di utilizzo dell'app sono gestiti tramite Supabase. Prima di continuare puoi leggere",
+    "register.acceptLegalError": "Devi accettare Privacy Policy e Termini prima di continuare.",
+    "register.passwordPolicyError": "La password deve avere almeno 8 caratteri e includere una maiuscola, una minuscola, un numero e un simbolo.",
+    "register.legalConsent": "Acconsento al trattamento dei dati necessari per creare e gestire il mio account su financeRox. Ho letto la",
+    "register.passwordHint": "La password deve contenere almeno 8 caratteri, una lettera maiuscola, una minuscola, un numero e un simbolo.",
+    "register.supportLink": "Supporto e richieste dati",
+
+    // Reset password
+    "reset.title": "Reimposta password",
+    "reset.subtitle": "Inserisci una nuova password per il tuo account financeRox.",
+    "reset.invalidLink": "Link non valido o scaduto. Richiedi un nuovo reset dalla pagina di login.",
+    "reset.passwordMin": "La nuova password deve contenere almeno 8 caratteri.",
+    "reset.passwordMismatch": "Le password non coincidono.",
+    "reset.success": "Password aggiornata correttamente. Ti reindirizzo al login.",
+    "reset.newPassword": "Nuova password",
+    "reset.confirmPassword": "Conferma nuova password",
+    "reset.submit": "Salva nuova password",
+    "reset.submitting": "Aggiornamento...",
+    "reset.backToLogin": "Torna al login",
 
     // TransactionDialog
     "tx.titleNew": "Nuova Transazione",
@@ -277,6 +300,17 @@ export const translations = {
     "adjust.cancel": "Annulla",
     "adjust.confirm": "Conferma",
     "adjust.saving": "Salvataggio...",
+    // Landing / Scenario
+    "landing.heroSupportLine": "Ti ritrovi con la calcolatrice? financeRox ti aiuta gia a leggere saldo attuale, entrate del mese, obiettivi e ricorrenze fisse senza rifare i conti a mano.",
+    "landing.problemTitlePre": "Stanco di usare",
+    "landing.problemTitleGrad": "la calcolatrice",
+    "landing.problemTitlePost": "per le tue finanze?",
+    "scenario.title": "Scenario Lab",
+    "scenario.badge": "BETA PREVIEW",
+    "scenario.lead": "Ti ritrovi ancora con la calcolatrice ogni volta che vuoi ragionare su stipendio, rate ricorrenti, obiettivi e saldo attuale?",
+    "scenario.description": "Stiamo preparando un'area dedicata basata sui tuoi dati reali: saldo attuale, entrate e uscite ricorrenti, ritmo dello stipendio e obiettivi attivi. Qui arriveranno in seguito simulazioni su rendimenti, benchmark e what-if di investimento, senza trasformare l'app in consulenza finanziaria.",
+    "scenario.emptyState": "Stiamo arrivando",
+    "scenario.footer": "Per ora questa e una sezione volutamente in arrivo. Il modulo futuro mostrera informazioni ricavate dai dati reali, non consigli finanziari automatici.",
   },
 
   en: {
@@ -476,6 +510,10 @@ export const translations = {
     "login.submitting": "Signing in...",
     "login.noAccount": "Don't have an account yet?",
     "login.registerLink": "Register here",
+    "login.authInfo": "Access is handled with Supabase authentication. See",
+    "login.resetNeedEmail": "Enter your email first to receive the password recovery link.",
+    "login.resetSent": "We sent you an email with the link to reset your password.",
+    "login.resetSending": "Sending link...",
 
     // Register
     "register.title": "Create Account",
@@ -490,6 +528,25 @@ export const translations = {
     "register.submitting": "Creating account...",
     "register.hasAccount": "Already have an account?",
     "register.loginLink": "Sign In",
+    "register.authInfo": "Registration and app usage data are handled through Supabase. Before continuing, you can read",
+    "register.acceptLegalError": "You must accept the Privacy Policy and Terms before continuing.",
+    "register.passwordPolicyError": "Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number and a symbol.",
+    "register.legalConsent": "I consent to the processing of the data needed to create and manage my financeRox account. I have read the",
+    "register.passwordHint": "Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one symbol.",
+    "register.supportLink": "Support and data requests",
+
+    // Reset password
+    "reset.title": "Reset password",
+    "reset.subtitle": "Enter a new password for your financeRox account.",
+    "reset.invalidLink": "Invalid or expired link. Request a new reset from the login page.",
+    "reset.passwordMin": "Your new password must contain at least 8 characters.",
+    "reset.passwordMismatch": "Passwords do not match.",
+    "reset.success": "Password updated successfully. Redirecting you to login.",
+    "reset.newPassword": "New password",
+    "reset.confirmPassword": "Confirm new password",
+    "reset.submit": "Save new password",
+    "reset.submitting": "Updating...",
+    "reset.backToLogin": "Back to login",
 
     // TransactionDialog
     "tx.titleNew": "New Transaction",
@@ -557,6 +614,17 @@ export const translations = {
     "adjust.cancel": "Cancel",
     "adjust.confirm": "Confirm",
     "adjust.saving": "Saving...",
+    // Landing / Scenario
+    "landing.heroSupportLine": "Still reaching for a calculator? financeRox already helps you read your current balance, monthly income, goals and fixed recurring items without redoing the math by hand.",
+    "landing.problemTitlePre": "Tired of using",
+    "landing.problemTitleGrad": "a calculator",
+    "landing.problemTitlePost": "for your finances?",
+    "scenario.title": "Scenario Lab",
+    "scenario.badge": "BETA PREVIEW",
+    "scenario.lead": "Still reaching for a calculator every time you want to reason about salary, recurring bills, goals and current balance?",
+    "scenario.description": "We are preparing a dedicated area based on your real app data: current balance, recurring income and expenses, salary cadence and active goals. This screen will later host simulations such as projected returns, benchmark scenarios and investment what-if flows, without turning the app into financial advice.",
+    "scenario.emptyState": "We're coming soon",
+    "scenario.footer": "For now this is an empty state by design. The future module will expose information derived from real data, not automated financial advice.",
   },
 } as const;
 

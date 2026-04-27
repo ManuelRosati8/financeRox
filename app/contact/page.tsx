@@ -39,8 +39,8 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
           <p style={{ color: "var(--text-secondary)", lineHeight: 1.7 }}>
             Per supporto tecnico, richieste privacy, rettifica o cancellazione dati puoi contattare financeRox all&apos;indirizzo seguente.
           </p>
-          <a href="mailto:support@financerox.app" style={{ color: "var(--accent)", fontSize: 18, fontWeight: 800, textDecoration: "none" }}>
-            support@financerox.app
+          <a href="mailto:support.financerox@gmail.com" style={{ color: "var(--accent)", fontSize: 18, fontWeight: 800, textDecoration: "none" }}>
+            support.financerox@gmail.com
           </a>
           <p style={{ color: "var(--text-secondary)", lineHeight: 1.7 }}>
             Per segnalare bug puoi anche usare il link email presente nella landing page. Le richieste vengono gestite nei giorni lavorativi.

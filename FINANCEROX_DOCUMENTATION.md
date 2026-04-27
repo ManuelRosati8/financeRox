@@ -41,15 +41,18 @@ Dopo che gli utenti si registrano e aggiungono transazioni, puoi vedere i dati i
 ---
 
 ### 3. Variabili d'Ambiente
-Il progetto richiede **due sole variabili** per funzionare sia in locale che in produzione:
+Il progetto richiede **tre variabili** per funzionare correttamente sia in locale che in produzione con reset password su dominio custom:
 
 | Chiave | Dove si trova | Esempio |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API → Project URL | `https://xxxx.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon public | `eyJhbGciO...` |
+| `NEXT_PUBLIC_APP_URL` | URL pubblica dell'app | `https://financerox.finance` |
 
 **In locale** → file `.env.local` nella root del progetto (mai committare questo file su Git).  
 **In produzione (Vercel)** → Dashboard Vercel → progetto → Settings → Environment Variables.
+
+`NEXT_PUBLIC_APP_URL` deve puntare al dominio canonico pubblico. Serve per generare i link di recupero password corretti anche quando il sito gira dietro Vercel o su preview URL.
 
 ---
 
@@ -58,6 +61,7 @@ Il progetto richiede **due sole variabili** per funzionare sia in locale che in 
    ```env
    NEXT_PUBLIC_SUPABASE_URL=il_tuo_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=la_tua_anon_key
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
    ```
 2. Installa le dipendenze aprendo il terminale nella cartella del progetto:
    ```bash
@@ -84,10 +88,15 @@ Il progetto richiede **due sole variabili** per funzionare sia in locale che in 
 3. **Imposta le variabili d'ambiente**: Nella sezione "Environment Variables" di Vercel, aggiungi:
    - `NEXT_PUBLIC_SUPABASE_URL` = il tuo Project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = la tua anon key
+    - `NEXT_PUBLIC_APP_URL` = `https://financerox.finance`
 4. **Configura Supabase per il dominio di produzione**:
    - In Supabase → **Authentication > URL Configuration** imposta:
-     - **Site URL**: `https://il-tuo-dominio.vercel.app`
-     - **Redirect URLs**: aggiungi `https://il-tuo-dominio.vercel.app/auth/callback`
+       - **Site URL**: `https://financerox.finance`
+       - **Redirect URLs**: aggiungi almeno
+          - `http://localhost:3000/auth/callback`
+          - `https://financerox.finance/auth/callback`
+          - `https://financerox.finance/reset-password`
+          - opzionale `https://www.financerox.finance/auth/callback` se usi `www`
    - Senza questo passaggio il login OAuth e le magic link non funzioneranno in produzione.
 5. Clicca **Deploy**. In circa 2 minuti avrai un URL pubblico.
 

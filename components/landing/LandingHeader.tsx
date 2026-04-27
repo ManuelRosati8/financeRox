@@ -31,14 +31,15 @@ export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           WebkitBackdropFilter: "blur(20px)",
           borderBottom: "1px solid var(--border-subtle)",
           padding: "0 6%",
-          display: "flex",
+          display: "grid",
+          gridTemplateColumns: "180px 1fr auto",
           alignItems: "center",
-          justifyContent: "space-between",
+          columnGap: 24,
           height: 64,
         }}
       >
         {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", width: 180, minWidth: 180 }}>
           <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
             <BrandWordmark size={30} />
           </Link>
@@ -47,7 +48,7 @@ export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
         {/* Nav — hidden on mobile */}
         <nav
           className="landing-nav"
-          style={{ display: "flex", alignItems: "center", gap: 28 }}
+          style={{ display: "flex", alignItems: "center", gap: 28, justifySelf: "center" }}
         >
           {NAV_LINKS.map(({ label, href }) => (
             <a
@@ -69,7 +70,7 @@ export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
         </nav>
 
         {/* Right: language toggle + CTA */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, justifySelf: "end", flexShrink: 0 }}>
           {/* Language toggle */}
           <button
             onClick={() => setLocale(locale === "it" ? "en" : "it")}

@@ -18,8 +18,7 @@ export function ScenarioBetaWidget({
   recurringIncomeCount,
   recurringExpenseCount,
 }: ScenarioBetaWidgetProps) {
-  const { locale, numberLocale } = useI18n();
-  const isEnglish = locale === "en";
+  const { locale, numberLocale, t } = useI18n();
   const currency = (value: number) =>
     new Intl.NumberFormat(numberLocale, {
       style: "currency",
@@ -27,34 +26,28 @@ export function ScenarioBetaWidget({
       maximumFractionDigits: 0,
     }).format(value);
 
-  const title = isEnglish ? "Scenario Lab" : "Scenario Lab";
-  const badge = isEnglish ? "BETA PREVIEW" : "BETA PREVIEW";
-  const lead = isEnglish
-    ? "Still reaching for a calculator every time you want to reason about salary, recurring bills, goals and current balance?"
-    : "Ti ritrovi ancora con la calcolatrice ogni volta che vuoi ragionare su stipendio, rate ricorrenti, obiettivi e saldo attuale?";
-  const description = isEnglish
-    ? "We are preparing a dedicated area based on your real app data: current balance, recurring income and expenses, salary cadence and active goals. This screen will later host simulations such as projected returns, benchmark scenarios and investment what-if flows, without turning the app into financial advice."
-    : "Stiamo preparando un'area dedicata basata sui tuoi dati reali: saldo attuale, entrate e uscite ricorrenti, ritmo dello stipendio e obiettivi attivi. Qui arriveranno in seguito simulazioni su rendimenti, benchmark e what-if di investimento, senza trasformare l'app in consulenza finanziaria.";
-  const emptyState = isEnglish ? "We're coming soon" : "Stiamo arrivando";
-  const footer = isEnglish
-    ? "For now this is an empty state by design. The future module will expose information derived from real data, not automated financial advice."
-    : "Per ora questa e una sezione volutamente in arrivo. Il modulo futuro mostrera informazioni ricavate dai dati reali, non consigli finanziari automatici.";
+  const title = t("scenario.title");
+  const badge = t("scenario.badge");
+  const lead = t("scenario.lead");
+  const description = t("scenario.description");
+  const emptyState = t("scenario.emptyState");
+  const footer = t("scenario.footer");
 
   const stats = [
     {
-      label: isEnglish ? "Current balance" : "Saldo attuale",
+      label: locale === "en" ? "Current balance" : "Saldo attuale",
       value: currency(currentBalance),
     },
     {
-      label: isEnglish ? "Monthly income" : "Entrate del mese",
+      label: locale === "en" ? "Monthly income" : "Entrate del mese",
       value: currency(monthlyIncome),
     },
     {
-      label: isEnglish ? "Recurring flow" : "Ricorrenze attive",
+      label: locale === "en" ? "Recurring flow" : "Ricorrenze attive",
       value: `${recurringIncomeCount} in · ${recurringExpenseCount} out`,
     },
     {
-      label: isEnglish ? "Goals tracked" : "Obiettivi tracciati",
+      label: locale === "en" ? "Goals tracked" : "Obiettivi tracciati",
       value: String(activeGoals),
     },
   ];

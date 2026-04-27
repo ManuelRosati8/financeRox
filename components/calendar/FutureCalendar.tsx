@@ -2,9 +2,10 @@
 import { 
   startOfMonth, endOfMonth, eachDayOfInterval, getDay, format, parseISO, isSameDay, addMonths, isValid
 } from "date-fns";
-import { it } from "date-fns/locale";
+import { enUS, it } from "date-fns/locale";
 import { X, Plus, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { Transaction } from "@/lib/types";
+import { useI18n } from "@/lib/i18n/context";
 
 interface Props {
   transactions: Transaction[];
@@ -38,9 +39,71 @@ function normalizeDaySignature(transaction: Transaction, dayKey: string) {
 }
 
 export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }: Props) {
+  const { locale, numberLocale } = useI18n();
   const [monthOffset, setMonthOffset] = useState(0);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const safeCurrentBalance = Number.isFinite(currentBalance) ? currentBalance : 0;
+  const isEnglish = locale === "en";
+  const dateLocale = isEnglish ? enUS : it;
+  const copy = isEnglish
+    ? {
+        weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        previousMonth: "Previous month",
+        nextMonth: "Next month",
+        today: "Today",
+        futureOffset: (offset: number) => `+${offset} month`,
+        pastOffset: (offset: number) => `${offset} month`,
+        estimatedStartFuture: "Estimated balance at start of month:",
+        estimatedStartPast: "Retrospective projection — estimated balance:",
+        overdraftRisk: "Overdraft risk",
+        estimatedBalance: "Estimated balance:",
+        overdraft: "Overdraft!",
+        newTransaction: "New Transaction",
+        noRecurring: "No recurring entries planned.",
+        useNewTransaction: "Use \"New Transaction\" to add one.",
+        recurrence: "Recurring",
+        monthly: "monthly",
+        weekly: "weekly",
+        yearly: "yearly",
+        daily: "daily",
+        income: "Income",
+        expenses: "Expenses",
+        net: "Net",
+        legendIncome: "Recurring income",
+        legendExpense: "Recurring expense",
+        legendToday: "Today",
+        clickDay: "Click a day for details",
+        calendarTitle: "Calendar",
+      }
+    : {
+        weekdays: ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"],
+        previousMonth: "Mese precedente",
+        nextMonth: "Mese successivo",
+        today: "Oggi",
+        futureOffset: (offset: number) => `+${offset} mese`,
+        pastOffset: (offset: number) => `${offset} mese`,
+        estimatedStartFuture: "Saldo stimato a inizio mese:",
+        estimatedStartPast: "Proiezione retrospettiva — saldo stimato:",
+        overdraftRisk: "Rischio scoperto!",
+        estimatedBalance: "Saldo stimato:",
+        overdraft: "Scoperto!",
+        newTransaction: "Nuova Transazione",
+        noRecurring: "Nessuna ricorrenza prevista.",
+        useNewTransaction: "Usa \"Nuova Transazione\" per aggiungerne una.",
+        recurrence: "Ricorrenza",
+        monthly: "mensile",
+        weekly: "settimanale",
+        yearly: "annuale",
+        daily: "giornaliera",
+        income: "Entrate",
+        expenses: "Uscite",
+        net: "Netto",
+        legendIncome: "Entrata ricorrente",
+        legendExpense: "Uscita ricorrente",
+        legendToday: "Oggi",
+        clickDay: "Clicca un giorno per i dettagli",
+        calendarTitle: "Calendario",
+      };
 
   const viewDateMs = useMemo(() => {
     const base = new Date();
@@ -147,7 +210,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
   // Calendar grid padding â€” Monday first (Italian locale)
   const startDay = getDay(monthStart);
   const emptyPrefixDays = startDay === 0 ? 6 : startDay - 1;
-  const WEEKDAYS = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+  const WEEKDAYS = copy.weekdays;
 
   // Estimate the balance at the START of the viewed month
   // For offset=0: use currentBalance as-is (projecting from today within the month)
@@ -195,7 +258,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
   const selectedDayDate    = selectedDay ? new Date(selectedDay + "T12:00:00") : null;
 
   const fmt = (n: number) =>
-    new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(n);
+    new Intl.NumberFormat(numberLocale, { style: "currency", currency: "EUR" }).format(n);
 
   const isFutureMonth  = monthOffset > 0;
 
@@ -203,7 +266,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
     <div className="glass future-calendar" style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
       {/* â”€â”€ Header with month navigation â”€â”€ */}
       <div className="future-calendar-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600 }}>Calendario</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 600 }}>{copy.calendarTitle}</h2>
         <div className="future-calendar-controls" style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <button
             onClick={() => { setMonthOffset(o => o - 1); setSelectedDay(null); }}
@@ -215,23 +278,23 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
             }}
             onMouseOver={e => (e.currentTarget.style.borderColor = "var(--accent)")}
             onMouseOut={e => (e.currentTarget.style.borderColor = "var(--border-subtle)")}
-            title="Mese precedente"
+            title={copy.previousMonth}
           >
             <ChevronLeft size={15} />
           </button>
 
           <div style={{ minWidth: 140, textAlign: "center" }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)", textTransform: "capitalize" }}>
-              {format(viewDate, "MMMM yyyy", { locale: it })}
+              {format(viewDate, "MMMM yyyy", { locale: dateLocale })}
             </span>
             {monthOffset !== 0 && (
               <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 1 }}>
-                {isFutureMonth ? `+${monthOffset} mese` : `${monthOffset} mese`}
+                {isFutureMonth ? copy.futureOffset(monthOffset) : copy.pastOffset(monthOffset)}
                 <button
                   onClick={() => { setMonthOffset(0); setSelectedDay(null); }}
                   style={{ marginLeft: 6, background: "none", border: "none", cursor: "pointer", color: "var(--accent)", fontSize: 10, fontWeight: 600, padding: 0 }}
                 >
-                  {"<- Oggi"}
+                  {`<- ${copy.today}`}
                 </button>
               </div>
             )}
@@ -247,7 +310,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
             }}
             onMouseOver={e => (e.currentTarget.style.borderColor = "var(--accent)")}
             onMouseOut={e => (e.currentTarget.style.borderColor = "var(--border-subtle)")}
-            title="Mese successivo"
+            title={copy.nextMonth}
           >
             <ChevronRight size={15} />
           </button>
@@ -263,7 +326,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
           fontSize: 12, display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <span style={{ color: "var(--text-secondary)" }}>
-            {isFutureMonth ? "Saldo stimato a inizio mese:" : "Proiezione retrospettiva â€” saldo stimato:"}
+            {isFutureMonth ? copy.estimatedStartFuture : copy.estimatedStartPast}
           </span>
           <span style={{
             fontFamily: "JetBrains Mono, monospace", fontWeight: 700, fontSize: 13,
@@ -339,7 +402,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
                   position: "absolute", top: -4, right: -4, width: 10, height: 10,
                   borderRadius: "50%", background: "var(--expense-color)",
                   border: "2px solid var(--bg-base)", zIndex: 1,
-                }} title="Rischio scoperto!" />
+                }} title={copy.overdraftRisk} />
               )}
 
               {/* Day number */}
@@ -356,7 +419,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
                     color: netAmount >= 0 ? "var(--income-color)" : "var(--expense-color)",
                     fontFamily: "JetBrains Mono, monospace",
                   }}>
-                    {netAmount > 0 ? "+" : ""}{Math.round(netAmount)}â‚¬
+                    {netAmount > 0 ? "+" : ""}{Math.round(netAmount)}€
                   </span>
                 )}
               </div>
@@ -407,15 +470,15 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
           <div className="future-calendar-detail-top" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <span style={{ fontSize: 15, fontWeight: 700, textTransform: "capitalize" }}>
-                {format(selectedDayDate, "EEEE d MMMM", { locale: it })}
+                {format(selectedDayDate, "EEEE d MMMM", { locale: dateLocale })}
               </span>
               {selectedDayBalance !== undefined && (
                 <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
-                  Saldo stimato:{" "}
+                  {copy.estimatedBalance}{" "}
                   <span style={{ fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: selectedDayBalance < 0 ? "var(--expense-color)" : "var(--income-color)" }}>
                     {fmt(selectedDayBalance)}
                   </span>
-                  {selectedDayBalance < 0 && <span style={{ marginLeft: 8, fontSize: 11, color: "var(--expense-color)", fontWeight: 600 }}>Scoperto!</span>}
+                  {selectedDayBalance < 0 && <span style={{ marginLeft: 8, fontSize: 11, color: "var(--expense-color)", fontWeight: 600 }}>{copy.overdraft}</span>}
                 </div>
               )}
             </div>
@@ -428,7 +491,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
                   background: "var(--accent)", color: "white", fontSize: 12, fontWeight: 700,
                 }}
               >
-                <Plus size={13} /> Nuova Transazione
+                <Plus size={13} /> {copy.newTransaction}
               </button>
               <button
                 onClick={() => setSelectedDay(null)}
@@ -442,8 +505,8 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
 
           {selectedDayTxs.length === 0 ? (
             <div style={{ padding: "16px 0", textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
-              Nessuna ricorrenza prevista.{" "}
-              <span style={{ fontSize: 12 }}>Usa &quot;Nuova Transazione&quot; per aggiungerne una.</span>
+              {copy.noRecurring}{" "}
+              <span style={{ fontSize: 12 }}>{copy.useNewTransaction}</span>
             </div>
           ) : (
             <>
@@ -472,7 +535,7 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
                           <div style={{ fontSize: 13, fontWeight: 600 }}>{cleanDesc || t.description}</div>
                           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2, flexWrap: "wrap" }}>
                             <span style={{ fontSize: 10, color: "var(--text-muted)" }}>
-                              Ricorrenza {t.interval === "monthly" ? "mensile" : t.interval === "weekly" ? "settimanale" : t.interval === "yearly" ? "annuale" : "giornaliera"}
+                              {copy.recurrence} {t.interval === "monthly" ? copy.monthly : t.interval === "weekly" ? copy.weekly : t.interval === "yearly" ? copy.yearly : copy.daily}
                             </span>
                             {t.category && (
                               <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 99, background: `${t.category.color}18`, color: t.category.color, fontWeight: 600 }}>
@@ -503,10 +566,10 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
                     display: "flex", gap: 16, paddingTop: 10,
                     borderTop: "1px solid var(--border-subtle)", flexWrap: "wrap"
                   }}>
-                    {inc > 0 && <span style={{ fontSize: 12, fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--income-color)" }}>Entrate +{fmt(inc)}</span>}
-                    {exp > 0 && <span style={{ fontSize: 12, fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--expense-color)" }}>Uscite -{fmt(exp)}</span>}
+                    {inc > 0 && <span style={{ fontSize: 12, fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--income-color)" }}>{copy.income} +{fmt(inc)}</span>}
+                    {exp > 0 && <span style={{ fontSize: 12, fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--expense-color)" }}>{copy.expenses} -{fmt(exp)}</span>}
                     <span style={{ marginLeft: "auto", fontSize: 12, fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: inc - exp >= 0 ? "var(--income-color)" : "var(--expense-color)" }}>
-                      Netto {inc - exp >= 0 ? "+" : ""}{fmt(inc - exp)}
+                      {copy.net} {inc - exp >= 0 ? "+" : ""}{fmt(inc - exp)}
                     </span>
                   </div>
                 );
@@ -519,15 +582,15 @@ export function FutureCalendar({ transactions, onDayClick, currentBalance = 0 }:
       {/* Legend */}
       <div className="future-calendar-legend" style={{ display: "flex", gap: 16, flexWrap: "wrap", paddingTop: 4, borderTop: "1px solid var(--border-subtle)" }}>
         {[
-          { dot: "var(--income-color)", label: "Entrata ricorrente" },
-          { dot: "var(--expense-color)", label: "Uscita ricorrente" },
-          { dot: "var(--accent)", label: "Oggi" },
+          { dot: "var(--income-color)", label: copy.legendIncome },
+          { dot: "var(--expense-color)", label: copy.legendExpense },
+          { dot: "var(--accent)", label: copy.legendToday },
         ].map(({ dot, label }) => (
           <span key={label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--text-muted)" }}>
             <span style={{ width: 8, height: 8, borderRadius: 2, background: dot, display: "inline-block" }} />{label}
           </span>
         ))}
-        <span className="future-calendar-legend-note" style={{ marginLeft: "auto", fontSize: 11, color: "var(--text-muted)" }}>Clicca un giorno per i dettagli</span>
+        <span className="future-calendar-legend-note" style={{ marginLeft: "auto", fontSize: 11, color: "var(--text-muted)" }}>{copy.clickDay}</span>
       </div>
     </div>
   );

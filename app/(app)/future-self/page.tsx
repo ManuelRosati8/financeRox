@@ -9,6 +9,7 @@ import { FutureCalendar } from "@/components/calendar/FutureCalendar";
 import { TransactionDialog } from "@/components/transactions/TransactionDialog";
 import { AppSelect } from "@/components/ui/AppSelect";
 import { WhatIfScenario, TransactionType, RecurringInterval, Transaction } from "@/lib/types";
+import { useI18n } from "@/lib/i18n/context";
 
 /** Easing: ease-out cubic */
 function easeOut(t: number) { return 1 - Math.pow(1 - t, 3); }
@@ -57,6 +58,7 @@ function MilestoneCard({
 }: {
   months: number; baseline: number; whatIf?: number;
 }) {
+  const { locale, numberLocale } = useI18n();
   const { display: displayBase, ref } = useCountUp(Math.abs(Math.round(baseline)));
   const delta = whatIf !== undefined ? whatIf - baseline : undefined;
   const { display: displayDelta } = useCountUp(
@@ -64,7 +66,7 @@ function MilestoneCard({
   );
 
   const fmt = (n: number) =>
-    new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+    new Intl.NumberFormat(numberLocale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
 
   return (
     <div
@@ -73,7 +75,7 @@ function MilestoneCard({
       style={{ padding: "22px 22px", textAlign: "center", transition: "transform 0.18s, box-shadow 0.18s" }}
     >
       <div style={{ fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>
-        +{months} {months === 1 ? "mese" : "mesi"}
+        +{months} {locale === "en" ? (months === 1 ? "month" : "months") : (months === 1 ? "mese" : "mesi")}
       </div>
       <div
         className="money"
@@ -90,7 +92,7 @@ function MilestoneCard({
           <span className="money" style={{ fontSize: 13, color: delta >= 0 ? "var(--income-color)" : "var(--expense-color)" }}>
             {delta >= 0 ? "+" : "-"}{fmt(displayDelta)}
           </span>
-          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>what-if</span>
+          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{locale === "en" ? "what-if" : "what-if"}</span>
         </div>
       )}
     </div>
@@ -100,6 +102,97 @@ function MilestoneCard({
 export default function FutureSelfPage() {
   const { data: transactions = [] } = useTransactions();
   const { data: goals = [] }        = useSavingsGoals();
+  const { locale, numberLocale } = useI18n();
+  const isEnglish = locale === "en";
+  const copy = isEnglish
+    ? {
+        title: "Future Self",
+        badge: "Wealth Snapshot™",
+        subtitle: "Project your balance from your current habits — recurring flows plus the average variable expenses of the last 3 months.",
+        algorithmTitle: "How the projection works:",
+        algorithmRecurring: "Recurring active flows",
+        algorithmTail: "are converted to a monthly value and applied to your current balance, then we subtract the average of your variable expenses over the last 3 months.",
+        recurringDetected: "Recurring flows detected in projection:",
+        customMonthsPreview: "Custom month preview",
+        customPlaceholder: "e.g. 48",
+        reset: "Reset",
+        balanceProjection: "Balance Projection",
+        baseline: "Baseline",
+        whatIf: "What-If",
+        calendarTitle: "Interactive Monthly Calendar",
+        beta: "BETA PREVIEW",
+        whatIfSectionTitle: "\"What Happens If...\" Simulator",
+        whatIfPanelTitle: "What happens if...",
+        whatIfPanelDescription: "Simulate the impact of a new recurring item on your future balance.",
+        quickScenarios: "Quick scenarios",
+        newExpense: "💸 New Expense",
+        newIncome: "💰 New Income",
+        amount: "Amount (€)",
+        frequency: "Frequency",
+        description: "Description",
+        descriptionPlaceholder: "e.g. Car payment",
+        newEntry: "New entry",
+        tableHeaders: ["Months", "Base balance", "With scenario", "Δ Difference"],
+        monthShort: "m",
+        presets: [
+          { label: "🏠 Mortgage €800/mo", type: "expense" as const, amount: "800", interval: "monthly" as const, desc: "Home mortgage" },
+          { label: "🚗 Car payment €300/mo", type: "expense" as const, amount: "300", interval: "monthly" as const, desc: "Car payment" },
+          { label: "💹 Investment €200", type: "expense" as const, amount: "200", interval: "monthly" as const, desc: "Monthly investment" },
+          { label: "📱 Subscription €15", type: "expense" as const, amount: "15", interval: "monthly" as const, desc: "New subscription" },
+          { label: "💰 Extra income €500", type: "income" as const, amount: "500", interval: "monthly" as const, desc: "Extra income" },
+          { label: "🎁 Annual bonus €1000", type: "income" as const, amount: "1000", interval: "yearly" as const, desc: "Annual bonus" },
+        ],
+        intervals: {
+          monthly: "every month",
+          yearly: "every year",
+          weekly: "every week",
+          daily: "every day",
+        },
+      }
+    : {
+        title: "Future Self",
+        badge: "Wealth Snapshot™",
+        subtitle: "Proiezione del tuo patrimonio basata sulle abitudini attuali — ricorrenze + media spese variabili ultimi 3 mesi.",
+        algorithmTitle: "Come calcoliamo la proiezione:",
+        algorithmRecurring: "fonti ricorrenti attive",
+        algorithmTail: "vengono mensilizzate e applicate al saldo attuale, poi sottraiamo la media delle spese variabili degli ultimi 3 mesi.",
+        recurringDetected: "Ricorrenze rilevate ed in proiezione:",
+        customMonthsPreview: "Mesi custom preview",
+        customPlaceholder: "es. 48",
+        reset: "Reset",
+        balanceProjection: "Proiezione del Saldo",
+        baseline: "Baseline",
+        whatIf: "What-If",
+        calendarTitle: "Calendario Mensile Interattivo",
+        beta: "BETA PREVIEW",
+        whatIfSectionTitle: "Simulatore \"Cosa Succede Se…\"",
+        whatIfPanelTitle: "Cosa succede se...",
+        whatIfPanelDescription: "Simula l'impatto di una nuova voce ricorrente sul tuo futuro.",
+        quickScenarios: "Scenari rapidi",
+        newExpense: "💸 Nuova Uscita",
+        newIncome: "💰 Nuova Entrata",
+        amount: "Importo (€)",
+        frequency: "Frequenza",
+        description: "Descrizione",
+        descriptionPlaceholder: "es. Rata auto",
+        newEntry: "Nuova voce",
+        tableHeaders: ["Mesi", "Saldo Base", "Con scenario", "Δ Differenza"],
+        monthShort: "m",
+        presets: [
+          { label: "🏠 Mutuo 800€/mese", type: "expense" as const, amount: "800", interval: "monthly" as const, desc: "Mutuo casa" },
+          { label: "🚗 Rata auto 300€/mese", type: "expense" as const, amount: "300", interval: "monthly" as const, desc: "Rata auto" },
+          { label: "💹 Investimento 200€", type: "expense" as const, amount: "200", interval: "monthly" as const, desc: "Investimento mensile" },
+          { label: "📱 Abbonamento 15€", type: "expense" as const, amount: "15", interval: "monthly" as const, desc: "Nuovo abbonamento" },
+          { label: "💰 Entrata extra 500€", type: "income" as const, amount: "500", interval: "monthly" as const, desc: "Entrata extra" },
+          { label: "🎁 Bonus annuale 1000€", type: "income" as const, amount: "1000", interval: "yearly" as const, desc: "Bonus annuale" },
+        ],
+        intervals: {
+          monthly: "ogni mese",
+          yearly: "ogni anno",
+          weekly: "ogni settimana",
+          daily: "ogni giorno",
+        },
+      };
 
   const [months, setMonths] = useState<number>(6);
   const [customMonths, setCustomMonths] = useState("");
@@ -125,9 +218,9 @@ export default function FutureSelfPage() {
       amount: parseFloat(whatIfAmount) || 0,
       type: whatIfType,
       interval: whatIfInterval,
-      description: whatIfDesc || "Nuova voce",
+      description: whatIfDesc || copy.newEntry,
     };
-  }, [whatIfActive, whatIfAmount, whatIfType, whatIfInterval, whatIfDesc]);
+  }, [whatIfActive, whatIfAmount, whatIfType, whatIfInterval, whatIfDesc, copy.newEntry]);
 
   const projectionData = useMemo(
     () => computeProjection(transactions, goals, activeMonths, whatIfScenario),
@@ -170,23 +263,28 @@ export default function FutureSelfPage() {
     return { incomeFixed, expenseFixed, net, uniqueRecurring };
   }, [transactions]);
 
+  const formatMoney = useCallback(
+    (value: number) => new Intl.NumberFormat(numberLocale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value),
+    [numberLocale]
+  );
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 28, paddingBottom: 120 }}>
       {/* Header */}
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
           <Zap size={24} color="var(--accent-purple)" />
-          <h1 style={{ fontSize: 26, fontWeight: 700 }}>Future Self</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 700 }}>{copy.title}</h1>
           <span style={{
             fontSize: 11, padding: "3px 10px", borderRadius: 99,
             background: "rgba(124,111,247,0.15)", color: "var(--accent-purple)",
             fontWeight: 600, border: "1px solid rgba(124,111,247,0.3)",
           }}>
-            Wealth Snapshot™
+            {copy.badge}
           </span>
         </div>
         <p style={{ color: "var(--text-secondary)" }}>
-          Proiezione del tuo patrimonio basata sulle abitudini attuali — ricorrenze + media spese variabili ultimi 3 mesi.
+          {copy.subtitle}
         </p>
       </div>
 
@@ -198,18 +296,22 @@ export default function FutureSelfPage() {
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <Info size={16} color="var(--accent)" style={{ flexShrink: 0, marginTop: 2 }} />
           <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-            <strong style={{ color: "var(--text-primary)" }}>Come calcoliamo la proiezione: </strong>
-            Al saldo attuale si somma il flusso delle tue <strong style={{ color: "var(--text-primary)" }}>fonti ricorrenti attive</strong> mensilizzate (es. entrate fisse mensili 
-            <strong style={{ color: "var(--income-color)", fontFamily: "JetBrains Mono, monospace" }}> +{new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(monthlyStats.incomeFixed)}</strong>
-            &nbsp;− spese fisse 
-            <strong style={{ color: "var(--expense-color)", fontFamily: "JetBrains Mono, monospace" }}> -{new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(monthlyStats.expenseFixed)}</strong>),
-            sottraendo poi la media delle tue spese <em>variabili</em> degli ultimi 3 mesi.
+            <strong style={{ color: "var(--text-primary)" }}>{copy.algorithmTitle} </strong>
+            {isEnglish ? "Your current balance is adjusted by your " : "Al saldo attuale si somma il flusso delle tue "}
+            <strong style={{ color: "var(--text-primary)" }}>{copy.algorithmRecurring}</strong>
+            {isEnglish ? " converted to monthly values (e.g. recurring income " : " mensilizzate (es. entrate fisse mensili "}
+            <strong style={{ color: "var(--income-color)", fontFamily: "JetBrains Mono, monospace" }}> +{formatMoney(monthlyStats.incomeFixed)}</strong>
+            {isEnglish ? " and fixed expenses " : " e spese fisse "}
+            <strong style={{ color: "var(--expense-color)", fontFamily: "JetBrains Mono, monospace" }}> -{formatMoney(monthlyStats.expenseFixed)}</strong>
+            {isEnglish ? "), then we subtract the average of your " : "), poi sottraiamo la media delle tue spese "}
+            <em>{isEnglish ? "variable" : "variabili"}</em>
+            {isEnglish ? " expenses over the last 3 months." : " degli ultimi 3 mesi."}
           </div>
         </div>
         
         {monthlyStats.uniqueRecurring.length > 0 && (
           <div style={{ paddingLeft: 26, fontSize: 12, color: "var(--text-muted)" }}>
-            <strong>Ricorrenze rilevate ed in proiezione:</strong>{" "}
+            <strong>{copy.recurringDetected}</strong>{" "}
             {monthlyStats.uniqueRecurring.map((t, i) => (
               <span key={i}>
                 {t.description} (<span style={{ color: t.type === "income" ? "var(--income-color)" : "var(--expense-color)" }}>
@@ -252,14 +354,14 @@ export default function FutureSelfPage() {
                 color: isActive ? "var(--accent)" : "var(--text-secondary)",
               }}
             >
-              {m} Mesi
+              {m} {isEnglish ? "Months" : "Mesi"}
               {isBetaPreview && (
                 <span style={{
                   fontSize: 9, padding: "1px 5px", borderRadius: 99, fontWeight: 700,
                   background: "rgba(249,115,22,0.12)", color: "var(--accent)",
                   border: "1px solid rgba(249,115,22,0.2)",
                 }}>
-                  BETA
+                  {copy.beta}
                 </span>
               )}
             </button>
@@ -281,15 +383,15 @@ export default function FutureSelfPage() {
             fontSize: 9, padding: "2px 6px", borderRadius: 99, fontWeight: 700,
             background: "rgba(124,111,247,0.15)", color: "var(--accent-purple)",
             border: "1px solid rgba(124,111,247,0.3)", whiteSpace: "nowrap",
-          }}>BETA</span>
-          <span style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap" }}>Mesi custom preview</span>
+          }}>{copy.beta}</span>
+          <span style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{copy.customMonthsPreview}</span>
           <input
             type="number"
             min="1"
             max="120"
             value={customMonths}
             onChange={(e) => setCustomMonths(e.target.value)}
-            placeholder="es. 48"
+            placeholder={copy.customPlaceholder}
             style={{
               width: 64, padding: "2px 8px", borderRadius: 8,
               background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)",
@@ -302,7 +404,7 @@ export default function FutureSelfPage() {
               type="button"
               onClick={() => setCustomMonths("")}
               style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 0, fontSize: 14, lineHeight: 1 }}
-              title="Reset"
+              title={copy.reset}
             >×</button>
           )}
         </div>
@@ -311,14 +413,14 @@ export default function FutureSelfPage() {
       {/* Main Chart */}
       <div className="glass" style={{ padding: "20px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700 }}>Proiezione del Saldo — {activeMonths} mesi</h2>
+          <h2 style={{ fontSize: 15, fontWeight: 700 }}>{copy.balanceProjection} — {activeMonths} {isEnglish ? "months" : "mesi"}</h2>
           <div style={{ display: "flex", gap: 16, fontSize: 12 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ width: 20, height: 3, background: "var(--accent)", display: "inline-block", borderRadius: 2 }} /> Baseline
+              <span style={{ width: 20, height: 3, background: "var(--accent)", display: "inline-block", borderRadius: 2 }} /> {copy.baseline}
             </span>
             {whatIfScenario && (
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ width: 20, height: 3, background: "#f59e0b", display: "inline-block", borderRadius: 2, border: "none", backgroundImage: "repeating-linear-gradient(90deg,#f59e0b 0,#f59e0b 6px,transparent 6px,transparent 9px)" }} /> What-If
+                <span style={{ width: 20, height: 3, background: "#f59e0b", display: "inline-block", borderRadius: 2, border: "none", backgroundImage: "repeating-linear-gradient(90deg,#f59e0b 0,#f59e0b 6px,transparent 6px,transparent 9px)" }} /> {copy.whatIf}
               </span>
             )}
           </div>
@@ -338,13 +440,13 @@ export default function FutureSelfPage() {
         
         {/* Calendar section header with beta badge */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700 }}>Calendario Mensile Interattivo</h2>
+          <h2 style={{ fontSize: 15, fontWeight: 700 }}>{copy.calendarTitle}</h2>
           <span style={{
             fontSize: 10, padding: "2px 8px", borderRadius: 99, fontWeight: 700,
             background: "rgba(249,115,22,0.12)", color: "var(--accent)",
             border: "1px solid rgba(249,115,22,0.25)", letterSpacing: "0.07em",
           }}>
-            BETA PREVIEW
+            {copy.beta}
           </span>
         </div>
 
@@ -360,13 +462,13 @@ export default function FutureSelfPage() {
 
         {/* What-If section header with beta badge */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700 }}>Simulatore &quot;Cosa Succede Se…&quot;</h2>
+          <h2 style={{ fontSize: 15, fontWeight: 700 }}>{copy.whatIfSectionTitle}</h2>
           <span style={{
             fontSize: 10, padding: "2px 8px", borderRadius: 99, fontWeight: 700,
             background: "rgba(249,115,22,0.12)", color: "var(--accent)",
             border: "1px solid rgba(249,115,22,0.25)", letterSpacing: "0.07em",
           }}>
-            BETA PREVIEW
+            {copy.beta}
           </span>
         </div>
 
@@ -375,32 +477,36 @@ export default function FutureSelfPage() {
           padding: 24, border: whatIfActive ? "1px solid rgba(245,158,11,0.3)" : "1px solid var(--border-subtle)",
           background: whatIfActive ? "rgba(245,158,11,0.04)" : undefined, transition: "all 0.25s",
         }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: whatIfActive ? 24 : 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="whatif-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, marginBottom: whatIfActive ? 24 : 0, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 240 }}>
               <Zap size={18} color={whatIfActive ? "#f59e0b" : "var(--text-muted)"} />
               <div>
                 <div style={{ fontSize: 15, fontWeight: 600, color: whatIfActive ? "#f59e0b" : "var(--text-primary)" }}>
-                  Cosa succede se...
+                  {copy.whatIfPanelTitle}
                 </div>
                   <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                    Simula l&apos;impatto di una nuova voce ricorrente sul tuo futuro
+                    {copy.whatIfPanelDescription}
                   </div>
                 </div>
               </div>
               {/* Toggle */}
               <button
+                className="whatif-switch"
                 type="button"
                 onClick={() => setWhatIfActive(!whatIfActive)}
+                aria-pressed={whatIfActive}
                 style={{
-                  width: 52, height: 28, borderRadius: 99, border: "none", cursor: "pointer",
-                  background: whatIfActive ? "#f59e0b" : "var(--bg-elevated)",
-                  position: "relative", transition: "background 0.2s",
+                  minWidth: 96, height: 40, borderRadius: 999, border: `1px solid ${whatIfActive ? "rgba(245,158,11,0.45)" : "var(--border-subtle)"}`, cursor: "pointer",
+                  background: whatIfActive ? "rgba(245,158,11,0.14)" : "var(--bg-elevated)",
+                  position: "relative", transition: "background 0.2s, border-color 0.2s", display: "flex", alignItems: "center", padding: "0 12px", justifyContent: whatIfActive ? "flex-end" : "flex-start", gap: 10, flexShrink: 0,
                 }}
               >
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", color: whatIfActive ? "#f59e0b" : "var(--text-muted)" }}>
+                  {whatIfActive ? "ON" : "OFF"}
+                </span>
                 <span style={{
-                  position: "absolute", top: 4, left: whatIfActive ? 27 : 4,
-                  width: 20, height: 20, borderRadius: "50%",
-                  background: "white", transition: "left 0.2s",
+                  width: 18, height: 18, borderRadius: "50%",
+                  background: whatIfActive ? "#f59e0b" : "white", transition: "all 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.18)",
                 }} />
               </button>
             </div>
@@ -410,16 +516,9 @@ export default function FutureSelfPage() {
 
                 {/* Quick preset scenarios */}
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Scenari rapidi</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>{copy.quickScenarios}</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {([
-                      { label: "🏠 Mutuo 800€/mese",    type: "expense" as const, amount: "800",  interval: "monthly"  as const, desc: "Mutuo casa" },
-                      { label: "🚗 Rata auto 300€/mese", type: "expense" as const, amount: "300",  interval: "monthly"  as const, desc: "Rata auto" },
-                      { label: "💹 Investimento 200€",   type: "expense" as const, amount: "200",  interval: "monthly"  as const, desc: "Investimento mensile" },
-                      { label: "📱 Abbonamento 15€",     type: "expense" as const, amount: "15",   interval: "monthly"  as const, desc: "Nuovo abbonamento" },
-                      { label: "💰 Entrata extra 500€",  type: "income"  as const, amount: "500",  interval: "monthly"  as const, desc: "Entrata extra" },
-                      { label: "🎁 Bonus annuale 1000€", type: "income"  as const, amount: "1000", interval: "yearly"   as const, desc: "Bonus annuale" },
-                    ]).map(preset => (
+                    {copy.presets.map(preset => (
                       <button key={preset.label} type="button"
                         onClick={() => { setWhatIfType(preset.type); setWhatIfAmount(preset.amount); setWhatIfInterval(preset.interval); setWhatIfDesc(preset.desc); }}
                         style={{
@@ -447,7 +546,7 @@ export default function FutureSelfPage() {
                         background: whatIfType === t ? "rgba(245,158,11,0.15)" : "var(--bg-subtle)",
                         color: whatIfType === t ? "#f59e0b" : "var(--text-secondary)",
                       }}>
-                      {t === "expense" ? "💸 Nuova Uscita" : "💰 Nuova Entrata"}
+                      {t === "expense" ? copy.newExpense : copy.newIncome}
                     </button>
                   ))}
                 </div>
@@ -455,7 +554,7 @@ export default function FutureSelfPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                   {/* Amount */}
                   <label>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>Importo (€)</div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>{copy.amount}</div>
                     <input type="number" step="1" min="0"
                       value={whatIfAmount} onChange={(e) => setWhatIfAmount(e.target.value)}
                       placeholder="0"
@@ -464,13 +563,13 @@ export default function FutureSelfPage() {
                   </label>
                   {/* Interval */}
                   <label>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>Frequenza</div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>{copy.frequency}</div>
                     <AppSelect
                       options={[
-                        { value: "monthly", label: "ogni mese" },
-                        { value: "yearly", label: "ogni anno" },
-                        { value: "weekly", label: "ogni settimana" },
-                        { value: "daily", label: "ogni giorno" },
+                        { value: "monthly", label: copy.intervals.monthly },
+                        { value: "yearly", label: copy.intervals.yearly },
+                        { value: "weekly", label: copy.intervals.weekly },
+                        { value: "daily", label: copy.intervals.daily },
                       ]}
                       value={whatIfInterval}
                       onChange={(value) => setWhatIfInterval(value as RecurringInterval)}
@@ -478,10 +577,10 @@ export default function FutureSelfPage() {
                   </label>
                   {/* Description */}
                   <label>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>Descrizione</div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>{copy.description}</div>
                     <input type="text"
                       value={whatIfDesc} onChange={(e) => setWhatIfDesc(e.target.value)}
-                      placeholder="es. Rata auto"
+                      placeholder={copy.descriptionPlaceholder}
                       style={{ width: "100%", padding: "10px 14px", background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)", borderRadius: 8, color: "var(--text-primary)", fontSize: 13, outline: "none" }}
                     />
                   </label>
@@ -489,7 +588,7 @@ export default function FutureSelfPage() {
 
                 {/* Per-milestone impact table */}
                 {whatIfAmount && parseFloat(whatIfAmount) > 0 && (() => {
-                  const fmt = (n: number) => new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+                  const fmt = (n: number) => new Intl.NumberFormat(numberLocale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
                   return (
                     <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--border-subtle)" }}>
                       {/* Header */}
@@ -498,7 +597,7 @@ export default function FutureSelfPage() {
                         background: whatIfType === "expense" ? "rgba(244,63,94,0.08)" : "rgba(16,185,129,0.08)",
                         padding: "10px 14px", borderBottom: "1px solid var(--border-subtle)",
                       }}>
-                        {["Mesi", "Saldo Base", "Con scenario", "Δ Differenza"].map(h => (
+                        {copy.tableHeaders.map(h => (
                           <div key={h} style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</div>
                         ))}
                       </div>
@@ -513,7 +612,7 @@ export default function FutureSelfPage() {
                             background: m === months ? "var(--accent-dim)" : "transparent",
                             transition: "background 0.15s",
                           }}>
-                            <div style={{ fontSize: 13, fontWeight: m === months ? 700 : 500, color: m === months ? "var(--accent)" : "var(--text-secondary)" }}>+{m}m</div>
+                            <div style={{ fontSize: 13, fontWeight: m === months ? 700 : 500, color: m === months ? "var(--accent)" : "var(--text-secondary)" }}>+{m}{copy.monthShort}</div>
                             <div style={{ fontSize: 12, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)" }}>{fmt(balance)}</div>
                             <div style={{ fontSize: 12, fontFamily: "JetBrains Mono, monospace", color: whatIfType === "expense" ? "var(--expense-color)" : "var(--income-color)" }}>
                               {whatIfBalance !== undefined ? fmt(whatIfBalance) : "—"}

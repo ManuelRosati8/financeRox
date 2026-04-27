@@ -55,7 +55,7 @@ export default async function PrivacyPage({ searchParams }: InfoPageProps) {
         <div className="glass" style={{ padding: 28, display: "flex", flexDirection: "column", gap: 24 }}>
           <Section title="1. Titolare e contatti">
             <p>
-              Per richieste privacy, accesso, rettifica o cancellazione dei dati puoi scrivere a <a href="mailto:support@financerox.app" style={{ color: "var(--accent)" }}>support@financerox.app</a>.
+              Per richieste privacy, accesso, rettifica o cancellazione dei dati puoi scrivere a <a href="mailto:support.financerox@gmail.com" style={{ color: "var(--accent)" }}>support.financerox@gmail.com</a>.
             </p>
           </Section>
 

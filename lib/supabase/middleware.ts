@@ -42,7 +42,8 @@ export async function updateSession(request: NextRequest) {
   const isPublicInfoRoute =
     url.pathname.startsWith('/privacy') ||
     url.pathname.startsWith('/terms') ||
-    url.pathname.startsWith('/contact')
+    url.pathname.startsWith('/contact') ||
+    url.pathname.startsWith('/reset-password')
 
   // The root landing page is always public
   const isLandingPage = url.pathname === '/'

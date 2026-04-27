@@ -12,6 +12,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useProfile } from "@/lib/supabase/hooks";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n/context";
+import { getPasswordResetRedirectUrl } from "@/lib/utils";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -105,6 +106,28 @@ export default function SettingsPage() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = "/login";
+  };
+
+  const handlePasswordReset = async () => {
+    if (!email) {
+      setDialogState({
+        title: t("settings.changePassword"),
+        description: "Nessuna email disponibile per questo account.",
+        confirmLabel: t("common.close"),
+      });
+      return;
+    }
+
+    const redirectTo = getPasswordResetRedirectUrl();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+
+    setDialogState({
+      title: t("settings.changePassword"),
+      description: error
+        ? error.message
+        : "Ti abbiamo inviato un'email con il link per reimpostare la password.",
+      confirmLabel: t("common.close"),
+    });
   };
 
   const closeDialog = () => {
@@ -256,13 +279,7 @@ export default function SettingsPage() {
           description={t("settings.changePasswordNote")}
         >
           <button
-            onClick={() => {
-              setDialogState({
-                title: t("settings.changePassword"),
-                description: t("settings.resetStub"),
-                confirmLabel: t("common.close"),
-              });
-            }}
+            onClick={handlePasswordReset}
             style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "7px 14px", borderRadius: 8, border: "1px solid var(--border)",

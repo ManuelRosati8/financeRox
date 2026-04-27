@@ -3,7 +3,7 @@
 import Link from "next/link";
 import {
   ArrowRight, BarChart3, Calendar, Zap, TrendingUp, Shield,
-  Sparkles, Tag, Target, CheckCircle2, ChevronRight,
+  Sparkles, Tag, Target, CheckCircle2, ChevronRight, ChevronDown,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
 
@@ -350,9 +350,11 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
               {isLoggedIn ? s.ctaDashboard : s.ctaStart}
               <ArrowRight size={16} />
             </Link>
-            <Link href="/login" style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "var(--bg-elevated)", color: "var(--text-primary)", padding: "15px 36px", borderRadius: 99, fontSize: 15, fontWeight: 700, textDecoration: "none", border: "1px solid var(--border)" }}>
-              {isLoggedIn ? s.ctaSettings : s.ctaDemo}
-            </Link>
+            {isLoggedIn && (
+              <Link href="/login" style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "var(--bg-elevated)", color: "var(--text-primary)", padding: "15px 36px", borderRadius: 99, fontSize: 15, fontWeight: 700, textDecoration: "none", border: "1px solid var(--border)" }}>
+                {s.ctaSettings}
+              </Link>
+            )}
           </div>
 
           {/* Social proof */}
@@ -594,7 +596,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
       </section>
 
       {/* ─── FAQ ─── */}
-      <section id="faq" style={{ padding: "100px 6%" }}>
+      <section id="faq" style={{ padding: "100px 6% 140px", scrollMarginTop: 96 }}>
         <div style={{ maxWidth: 760, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 20, padding: "6px 16px", borderRadius: 99, background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.25)" }}>
@@ -603,14 +605,16 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
             <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 900, letterSpacing: "-0.03em", marginBottom: 14 }}>{s.faqTitle}</h2>
             <p style={{ fontSize: 16, color: "var(--text-secondary)", maxWidth: 500, margin: "0 auto" }}>{s.faqSub}</p>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {s.faq.map(({ q, a }) => (
-              <details key={q} style={{ background: "var(--glass-bg)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid var(--glass-border)", borderRadius: 14, overflow: "hidden" }}>
-                <summary style={{ padding: "18px 22px", fontSize: 15, fontWeight: 600, cursor: "pointer", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, userSelect: "none" }}>
-                  {q}
-                  <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", background: "rgba(249,115,22,0.12)", border: "1px solid rgba(249,115,22,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: "var(--accent)", fontWeight: 400 }}>+</span>
+              <details key={q} className="faq-item" style={{ background: "var(--glass-bg)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid var(--glass-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 14px 36px rgba(15,23,42,0.08)" }}>
+                <summary className="faq-summary" style={{ padding: "20px 22px", fontSize: 15, fontWeight: 600, cursor: "pointer", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, userSelect: "none" }}>
+                  <span className="faq-question" style={{ flex: 1 }}>{q}</span>
+                  <span className="faq-toggle" style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 12, background: "rgba(249,115,22,0.16)", border: "1px solid rgba(249,115,22,0.28)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontWeight: 400 }} aria-hidden="true">
+                    <ChevronDown size={18} strokeWidth={2.6} />
+                  </span>
                 </summary>
-                <div style={{ padding: "16px 22px 20px", fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.75, borderTop: "1px solid var(--border-subtle)" }}>{a}</div>
+                <div className="faq-answer" style={{ padding: "0 22px 22px", fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.75 }}>{a}</div>
               </details>
             ))}
           </div>
@@ -638,7 +642,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
             </div>
           </div>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="mailto:support@financerox.app?subject=Bug%20Report%20-%20financeRox&body=Description%3A%0A%0ASteps%3A%0A%0AExpected%3A%0A%0ADevice%2FBrowser%3A" style={{ display: "inline-flex", alignItems: "center", gap: 9, background: "var(--accent)", color: "white", padding: "13px 28px", borderRadius: 99, fontSize: 14, fontWeight: 700, textDecoration: "none", boxShadow: "0 6px 20px rgba(249,115,22,0.35)" }}>
+            <a href="mailto:support.financerox@gmail.com?subject=Bug%20Report%20-%20financeRox&body=Description%3A%0A%0ASteps%3A%0A%0AExpected%3A%0A%0ADevice%2FBrowser%3A" style={{ display: "inline-flex", alignItems: "center", gap: 9, background: "var(--accent)", color: "white", padding: "13px 28px", borderRadius: 99, fontSize: 14, fontWeight: 700, textDecoration: "none", boxShadow: "0 6px 20px rgba(249,115,22,0.35)" }}>
               {s.bugBtn}
             </a>
           </div>

@@ -70,7 +70,7 @@ export default async function TermsPage({ searchParams }: InfoPageProps) {
           </Section>
 
           <Section title="5. Cancellazione account e dati">
-            <p>L&apos;utente può richiedere la cancellazione del proprio account e dei dati associati dalle impostazioni disponibili nell&apos;app o scrivendo a <a href="mailto:support@financerox.app" style={{ color: "var(--accent)" }}>support@financerox.app</a>.</p>
+            <p>L&apos;utente può richiedere la cancellazione del proprio account e dei dati associati dalle impostazioni disponibili nell&apos;app o scrivendo a <a href="mailto:support.financerox@gmail.com" style={{ color: "var(--accent)" }}>support.financerox@gmail.com</a>.</p>
           </Section>
 
           <Section title="6. Limitazione di responsabilità">
