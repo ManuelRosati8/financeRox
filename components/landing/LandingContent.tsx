@@ -317,8 +317,8 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
   return (
     <>
       {/* ─── HERO ─── */}
-      <section style={{ padding: "110px 6% 80px", textAlign: "center", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(249,115,22,0.11) 0%, transparent 68%)", pointerEvents: "none" }} />
+      <section className="landing-hero" style={{ padding: "110px 6% 80px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+        <div className="landing-hero-glow" style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(249,115,22,0.11) 0%, transparent 68%)", pointerEvents: "none" }} />
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: 860, margin: "0 auto" }}>
           {/* Badge */}
@@ -345,7 +345,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
           </p>
 
           {/* CTAs */}
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+          <div className="landing-hero-ctas" style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href={isLoggedIn ? "/dashboard" : "/register"} style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "var(--accent)", color: "white", padding: "15px 36px", borderRadius: 99, fontSize: 15, fontWeight: 800, textDecoration: "none", boxShadow: "0 8px 28px rgba(249,115,22,0.4)" }}>
               {isLoggedIn ? s.ctaDashboard : s.ctaStart}
               <ArrowRight size={16} />
@@ -358,13 +358,13 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
           </div>
 
           {/* Social proof */}
-          <div style={{ marginTop: 36, display: "flex", justifyContent: "center", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
+          <div className="landing-proof-row" style={{ marginTop: 36, display: "flex", justifyContent: "center", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
             {s.proofs.map((item) => (
               <span key={item} style={{ fontSize: 12, color: "var(--text-muted)" }}>{item}</span>
             ))}
           </div>
 
-          <div className="glass" style={{ marginTop: 28, padding: "18px 20px", textAlign: "left", maxWidth: 760, marginInline: "auto", border: "1px solid rgba(249,115,22,0.18)" }}>
+          <div className="glass landing-compliance-card" style={{ marginTop: 28, padding: "18px 20px", textAlign: "left", maxWidth: 760, marginInline: "auto", border: "1px solid rgba(249,115,22,0.18)" }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
               {compliance.title}
             </div>
@@ -385,7 +385,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
         </div>
 
         {/* App preview mockup */}
-        <div style={{ marginTop: 72, maxWidth: 960, margin: "72px auto 0", background: "var(--bg-surface)", border: "1px solid rgba(249,115,22,0.12)", borderRadius: 22, overflow: "hidden", boxShadow: "0 40px 100px rgba(0,0,0,0.65), 0 0 0 1px rgba(249,115,22,0.08)" }}>
+        <div className="landing-preview" style={{ marginTop: 72, maxWidth: 960, margin: "72px auto 0", background: "var(--bg-surface)", border: "1px solid rgba(249,115,22,0.12)", borderRadius: 22, overflow: "hidden", boxShadow: "0 40px 100px rgba(0,0,0,0.65), 0 0 0 1px rgba(249,115,22,0.08)" }}>
           {/* Browser chrome */}
           <div style={{ padding: "14px 20px", background: "var(--bg-elevated)", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#ef4444" }} />
@@ -394,7 +394,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
             <span style={{ marginLeft: 14, fontSize: 12, color: "var(--text-muted)", fontFamily: "JetBrains Mono, monospace" }}>financeRox — Dashboard</span>
           </div>
           {/* KPI grid */}
-          <div style={{ padding: "28px 28px 0", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+          <div className="landing-preview-kpis" style={{ padding: "28px 28px 0", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
             {s.kpis.map((kpi) => (
               <div key={kpi.label} style={{ background: "var(--bg-subtle)", borderRadius: 12, padding: "14px 16px", border: "1px solid var(--border-subtle)" }}>
                 <div style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{kpi.label}</div>
@@ -416,7 +416,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
 
       {/* ─── PROBLEM STRIP ─── */}
       <section style={{ padding: "60px 6%" }}>
-        <div className="reveal" style={{ maxWidth: 860, margin: "0 auto", background: "var(--glass-bg)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid rgba(249,115,22,0.18)", borderRadius: 20, padding: "44px 48px", display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="reveal landing-problem-card" style={{ maxWidth: 860, margin: "0 auto", background: "var(--glass-bg)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid rgba(249,115,22,0.18)", borderRadius: 20, padding: "44px 48px", display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <span style={{ fontSize: 32 }}>😩</span>
             <h2 style={{ fontSize: "clamp(22px, 3.5vw, 34px)", fontWeight: 800, letterSpacing: "-0.025em", margin: 0 }}>
@@ -456,7 +456,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
           </h2>
           <p style={{ fontSize: 16, color: "var(--text-secondary)", maxWidth: 520, margin: "0 auto" }}>{s.featuresSub}</p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 16 }}>
+        <div className="landing-bento-grid" style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 16 }}>
           {s.bentoCards.map((card, i) => (
             <BentoCard
               key={card.title}
@@ -475,7 +475,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
 
       {/* ─── FUTURE SELF SHOWCASE ─── */}
       <section id="futureself" style={{ padding: "90px 6%", maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }}>
+        <div className="landing-split-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }}>
           {/* Left copy */}
           <div className="reveal">
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 20, padding: "6px 14px", borderRadius: 99, background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.25)" }}>
@@ -502,7 +502,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
                 <Zap size={13} color="var(--accent)" /> {s.futureMockLabel}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
+              <div className="landing-milestone-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
                 {s.futureMilestones.map(({ label, value }) => (
                   <div key={label} style={{ background: "var(--bg-subtle)", borderRadius: 12, padding: "16px 10px", textAlign: "center", border: "1px solid rgba(249,115,22,0.12)" }}>
                     <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>{label}</div>
@@ -528,7 +528,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
 
       {/* ─── CALENDAR SHOWCASE ─── */}
       <section id="calendar" style={{ padding: "90px 6%", maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }}>
+        <div className="landing-split-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }}>
           {/* Left — calendar mockup */}
           <div className="reveal">
             <div style={{ background: "var(--bg-surface)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 20, padding: 24, boxShadow: "0 28px 64px rgba(0,0,0,0.5)" }}>
@@ -536,12 +536,12 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
                 <span style={{ fontSize: 14, fontWeight: 700 }}>{s.calendarMonth}</span>
                 <span style={{ fontSize: 13, fontWeight: 600, color: "#f59e0b" }}>financeRox</span>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 6 }}>
+              <div className="landing-calendar-weekdays" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 6 }}>
                 {s.calendarWeekdays.map((d, i) => (
                   <div key={i} style={{ fontSize: 9, fontWeight: 600, color: "var(--text-muted)", textAlign: "center", textTransform: "uppercase" }}>{d}</div>
                 ))}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+              <div className="landing-calendar-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
                 {Array.from({ length: 5 }).map((_, i) => <div key={`e${i}`} />)}
                 {CAL_DAYS.map(({ d, e, t, today, bal }) => (
                   <div key={d} style={{ minHeight: 36, borderRadius: 8, padding: "5px 4px", background: today ? "rgba(249,115,22,0.12)" : e ? (t === "income" ? "rgba(34,197,94,0.07)" : "rgba(239,68,68,0.07)") : "var(--bg-subtle)", border: today ? "1px solid rgba(249,115,22,0.5)" : "1px solid var(--border-subtle)", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
@@ -585,7 +585,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
 
       {/* ─── HIGHLIGHTS ROW ─── */}
       <section style={{ padding: "60px 6%", background: "linear-gradient(135deg, rgba(249,115,22,0.05) 0%, transparent 50%)", borderTop: "1px solid var(--border-subtle)", borderBottom: "1px solid var(--border-subtle)" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 40, textAlign: "center" }}>
+        <div className="landing-highlights-grid" style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 40, textAlign: "center" }}>
           {s.highlights.map(({ value, label }, i) => (
             <div key={label} className={`reveal reveal-d${i + 1}`}>
               <div style={{ fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 900, color: "var(--accent)", fontFamily: "JetBrains Mono, monospace", letterSpacing: "-0.03em", marginBottom: 8 }}>{value}</div>
@@ -623,7 +623,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
 
       {/* ─── BUG REPORT ─── */}
       <section id="bug-report" style={{ padding: "80px 6% 100px" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto", background: "var(--glass-bg)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid rgba(249,115,22,0.22)", borderRadius: 22, padding: "48px 44px", textAlign: "center" }}>
+        <div className="landing-bug-card" style={{ maxWidth: 680, margin: "0 auto", background: "var(--glass-bg)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid rgba(249,115,22,0.22)", borderRadius: 22, padding: "48px 44px", textAlign: "center" }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(249,115,22,0.12)", border: "1px solid rgba(249,115,22,0.25)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 22px", fontSize: 26 }}>🐛</div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16, padding: "5px 14px", borderRadius: 99, background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.25)" }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.07em", textTransform: "uppercase" }}>Bug &amp; Feedback</span>
@@ -651,7 +651,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
       </section>
 
       {/* ─── FINAL CTA ─── */}
-      <section style={{ padding: "100px 6%", textAlign: "center" }}>
+      <section className="landing-final-cta" style={{ padding: "100px 6%", textAlign: "center" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 24, padding: "7px 18px", borderRadius: 99, background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.25)" }}>
           <CheckCircle2 size={13} color="var(--accent)" />
           <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>{s.ctaBadge}</span>
@@ -665,11 +665,11 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
       </section>
 
       {/* ─── FOOTER ─── */}
-      <footer style={{ padding: "28px 6%", borderTop: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+      <footer className="landing-footer" style={{ padding: "28px 6%", borderTop: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
           © {new Date().getFullYear()} financeRox — {s.footerCopyright}
         </span>
-        <div style={{ display: "flex", gap: 24 }}>
+        <div className="landing-footer-links" style={{ display: "flex", gap: 24 }}>
           <Link href="/privacy" style={{ fontSize: 12, color: "var(--text-muted)", textDecoration: "none" }}>{s.footerLinks[0]}</Link>
           <Link href="/terms" style={{ fontSize: 12, color: "var(--text-muted)", textDecoration: "none" }}>{s.footerLinks[1]}</Link>
           <Link href="/contact" style={{ fontSize: 12, color: "var(--text-muted)", textDecoration: "none" }}>{s.footerLinks[2]}</Link>
