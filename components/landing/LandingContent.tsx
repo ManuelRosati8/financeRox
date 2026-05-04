@@ -272,7 +272,7 @@ const CAL_DAYS = [
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const s = locale === "en" ? en : it;
   const compliance = locale === "en"
     ? {
@@ -341,7 +341,7 @@ export function LandingContent({ isLoggedIn }: { isLoggedIn: boolean }) {
           </p>
 
           <p style={{ fontSize: 14, color: "var(--text-muted)", maxWidth: 760, margin: "-24px auto 36px", lineHeight: 1.75 }}>
-            {s.heroSupportLine}
+            {t("landing.heroSupportLine")}
           </p>
 
           {/* CTAs */}
