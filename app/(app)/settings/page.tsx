@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   User, Mail, Globe, LogOut, LogIn, Sun, Moon,
-  ChevronRight, Shield, CreditCard, Trash2, Save,
+  ChevronRight, Shield, CreditCard, Trash2, Save, Info,
 } from "lucide-react";
 import { AppSelect } from "@/components/ui/AppSelect";
 import { useTheme } from "@/lib/theme-context";
@@ -158,6 +158,42 @@ export default function SettingsPage() {
         <p style={{ color: "var(--text-secondary)", marginTop: 4, fontSize: 13 }}>
           {t("settings.subtitle")}
         </p>
+      </div>
+
+      <div
+        className="glass fade-up"
+        style={{
+          padding: 18,
+          display: "flex",
+          gap: 12,
+          alignItems: "flex-start",
+          border: "1px solid rgba(245, 158, 11, 0.24)",
+          background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.02))",
+        }}
+      >
+        <div
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 10,
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(245, 158, 11, 0.14)",
+            color: "var(--accent-amber)",
+          }}
+        >
+          <Info size={17} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+            {t("settings.previewNoticeTitle")}
+          </div>
+          <div style={{ fontSize: 12, lineHeight: 1.65, color: "var(--text-secondary)" }}>
+            {t("settings.previewNoticeBody")}
+          </div>
+        </div>
       </div>
 
       {/* ── Account ── */}

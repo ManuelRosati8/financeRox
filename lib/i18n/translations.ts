@@ -68,6 +68,9 @@ export const translations = {
     "dashboard.incomeVsExpenses": "Entrate vs Uscite",
     "dashboard.recentTransactions": "Ultime Transazioni",
     "dashboard.clickToEdit": "Clicca per modificare questo saldo",
+    "dashboard.currentValue": "Valore attuale",
+    "dashboard.period": "Periodo",
+    "dashboard.action": "Azione",
     "dashboard.last6Months": "Ultimi 6 mesi",
     "dashboard.incomeLabel": "Entrate",
     "dashboard.expenseLabel": "Uscite",
@@ -86,6 +89,10 @@ export const translations = {
     "dashboard.emptySpendingDescription": "Assegna una categoria alle uscite per ottenere una ripartizione chiara delle spese.",
     "dashboard.emptyGoalsTitle": "Nessun obiettivo attivo",
     "dashboard.emptyGoalsDescription": "Crea un obiettivo di risparmio per monitorare i progressi direttamente dalla dashboard.",
+    "projection.baseline": "Baseline",
+    "projection.whatIf": "What-If",
+    "projection.baselineFull": "Proiezione baseline",
+    "projection.whatIfFull": "Proiezione What-If",
 
     // Transactions Page
     "transactions.title": "Transazioni",
@@ -136,6 +143,8 @@ export const translations = {
     // Settings
     "settings.title": "Impostazioni",
     "settings.subtitle": "Gestisci account, preferenze e sicurezza",
+    "settings.previewNoticeTitle": "Preview e calcoli, non sincronizzazione bancaria",
+    "settings.previewNoticeBody": "Per ora financeRox usa solo i dati che inserisci manualmente per mostrarti preview, proiezioni e calcoli. Non aggiorna automaticamente il saldo reale, non genera ancora movimenti automatici alla data delle ricorrenze e non e collegato al tuo conto bancario.",
     "settings.account": "Account",
     "settings.fullName": "Nome completo",
     "settings.email": "Email",
@@ -382,6 +391,9 @@ export const translations = {
     "dashboard.incomeVsExpenses": "Income vs Expenses",
     "dashboard.recentTransactions": "Recent Transactions",
     "dashboard.clickToEdit": "Click to edit this balance",
+    "dashboard.currentValue": "Current value",
+    "dashboard.period": "Period",
+    "dashboard.action": "Action",
     "dashboard.last6Months": "Last 6 months",
     "dashboard.incomeLabel": "Income",
     "dashboard.expenseLabel": "Expenses",
@@ -400,6 +412,10 @@ export const translations = {
     "dashboard.emptySpendingDescription": "Assign categories to expenses to get a clear spending breakdown here.",
     "dashboard.emptyGoalsTitle": "No active goals",
     "dashboard.emptyGoalsDescription": "Create a savings goal to track your progress directly from the dashboard.",
+    "projection.baseline": "Baseline",
+    "projection.whatIf": "What-If",
+    "projection.baselineFull": "Baseline projection",
+    "projection.whatIfFull": "What-If projection",
 
     // Transactions Page
     "transactions.title": "Transactions",
@@ -450,6 +466,8 @@ export const translations = {
     // Settings
     "settings.title": "Settings",
     "settings.subtitle": "Manage account, preferences and security",
+    "settings.previewNoticeTitle": "Preview and calculations, not bank sync",
+    "settings.previewNoticeBody": "For now financeRox only uses the data you enter manually to show previews, projections and calculations. It does not automatically update your real balance, it does not yet generate automatic entries on recurring due dates, and it is not connected to your bank account.",
     "settings.account": "Account",
     "settings.fullName": "Full name",
     "settings.email": "Email",

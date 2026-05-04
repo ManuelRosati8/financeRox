@@ -2,18 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ArrowLeftRight, Target, TrendingUp, Globe } from "lucide-react";
+import { LayoutDashboard, ArrowLeftRight, Target, TrendingUp, Settings } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
 
 export function MobileNav() {
   const pathname = usePathname();
-  const { t, locale, setLocale } = useI18n();
+  const { t } = useI18n();
 
   const navItems = [
     { href: "/dashboard",    labelKey: "nav.home" as const,         icon: LayoutDashboard },
     { href: "/transactions", labelKey: "nav.transactions" as const,  icon: ArrowLeftRight  },
     { href: "/goals",        labelKey: "nav.goals" as const,         icon: Target          },
     { href: "/future-self",  labelKey: "nav.future" as const,        icon: TrendingUp      },
+    { href: "/settings",     labelKey: "nav.settings" as const,      icon: Settings        },
   ];
 
   return (
@@ -50,21 +51,6 @@ export function MobileNav() {
           </Link>
         );
       })}
-      {/* Language toggle */}
-      <button
-        onClick={() => setLocale(locale === "it" ? "en" : "it")}
-        style={{
-          flex: 1, display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center",
-          background: "transparent", border: "none", cursor: "pointer",
-          padding: "10px 4px", gap: 3,
-          color: "var(--text-muted)", fontSize: 10,
-          borderTop: "2px solid transparent",
-        }}
-      >
-        <Globe size={20} />
-        {locale.toUpperCase()}
-      </button>
     </nav>
   );
 }

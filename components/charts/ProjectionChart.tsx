@@ -6,6 +6,7 @@ import {
 } from "recharts";
 import { ProjectionPoint } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/context";
 
 interface Props {
   data: ProjectionPoint[];
@@ -19,6 +20,8 @@ const CustomTooltip = ({
   payload?: { value: number; dataKey: string; color: string }[];
   label?: string;
 }) => {
+  const { t } = useI18n();
+
   if (!active || !payload?.length) return null;
   return (
     <div style={{
@@ -32,7 +35,7 @@ const CustomTooltip = ({
           <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: p.color, display: "inline-block" }} />
             <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-              {p.dataKey === "balance" ? "Baseline" : "What-If"}
+              {p.dataKey === "balance" ? t("projection.baseline") : t("projection.whatIf")}
             </span>
           </span>
           <span style={{
@@ -48,6 +51,7 @@ const CustomTooltip = ({
 };
 
 export function ProjectionChart({ data, showWhatIf }: Props) {
+  const { t } = useI18n();
   const milestoneMonths = [5, 11, 23];
   const milestones = milestoneMonths.map((i) => data[i]?.month).filter(Boolean);
 
@@ -87,7 +91,7 @@ export function ProjectionChart({ data, showWhatIf }: Props) {
         <Legend
           formatter={(value) => (
             <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-              {value === "balance" ? "Proiezione baseline" : "Proiezione What‑If"}
+              {value === "balance" ? t("projection.baselineFull") : t("projection.whatIfFull")}
             </span>
           )}
         />

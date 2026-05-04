@@ -60,7 +60,7 @@ function KpiCard({
 
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600 }}>
-          Valore attuale
+          {t("dashboard.currentValue")}
         </span>
         {isPercentDisplay ? (
           <div className="money" style={{ fontSize: 26, fontWeight: 700, color: trend === "up" ? "var(--income-color)" : "var(--text-primary)" }}>
@@ -98,7 +98,7 @@ function KpiCard({
           gap: 3,
         }}>
           <span style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Periodo
+            {t("dashboard.period")}
           </span>
           <span style={{ fontSize: 12, color: "var(--text-primary)", fontWeight: 600 }}>
             {subtitle}
@@ -108,7 +108,7 @@ function KpiCard({
         {hint && (
           <div style={{ display: "flex", flexDirection: "column", gap: 3, alignItems: "flex-start" }}>
             <span style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Azione
+              {t("dashboard.action")}
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color, fontWeight: 600 }}>
               <ExternalLink size={12} />
