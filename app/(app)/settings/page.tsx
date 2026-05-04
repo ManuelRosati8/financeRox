@@ -211,7 +211,7 @@ export default function SettingsPage() {
         </SettingRow>
 
         <SettingRow icon={Mail} label={t("settings.email")} description={t("settings.emailNote")}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", width: "100%", justifyContent: "flex-end" }}>
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -219,10 +219,10 @@ export default function SettingsPage() {
               style={{
                 padding: "7px 12px", borderRadius: 8, fontSize: 13,
                 background: "var(--bg-subtle)", border: "1px solid var(--border)",
-                color: "var(--text-primary)", outline: "none", width: 200,
+                color: "var(--text-primary)", outline: "none", width: 200, maxWidth: "100%", flex: "1 1 220px", minWidth: 0,
               }}
             />
-            <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: "var(--income-color)", fontWeight: 600 }}>
+            <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: "var(--income-color)", fontWeight: 600, flexShrink: 0 }}>
               {t("common.verified")}
             </span>
           </div>

@@ -292,8 +292,7 @@ export default function DashboardPage() {
       }}>
         <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
         <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.7, flex: 1 }}>
-          <strong style={{ color: "var(--text-primary)" }}>Ti ritrovi con la calcolatrice?</strong>
-          {" "}financeRox ti aiuta gia a leggere saldo attuale, entrate del mese, obiettivi e ricorrenze fisse senza rifare i conti a mano.
+          <strong style={{ color: "var(--text-primary)" }}>{t("landing.heroSupportLine")}</strong>
           <br />
           <strong style={{ color: "var(--text-primary)" }}>{t("dashboard.whereEdit")}</strong>
           {" — "}

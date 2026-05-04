@@ -138,10 +138,10 @@ export function GoalDialog({ open, onClose, initialData }: Props) {
           {/* Color picker */}
           <div>
             <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 8 }}>Colore</div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {COLORS.map((c) => (
                 <button key={c} type="button" onClick={() => setColor(c)}
-                  style={{ width: 28, height: 28, borderRadius: "50%", border: `3px solid ${color === c ? "white" : "transparent"}`, background: c, cursor: "pointer", transition: "border 0.15s" }}
+                  style={{ width: 28, minWidth: 28, height: 28, minHeight: 28, borderRadius: "50%", flexShrink: 0, aspectRatio: "1 / 1", border: `3px solid ${color === c ? "white" : "transparent"}`, background: c, cursor: "pointer", transition: "border 0.15s" }}
                 />
               ))}
             </div>
@@ -156,7 +156,7 @@ export function GoalDialog({ open, onClose, initialData }: Props) {
           </label>
 
           {/* Target + Current */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
             <label>
               <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>Target (€)</div>
               <input type="number" step="0.01" min="1" required value={target} onChange={(e) => setTarget(e.target.value)} placeholder="10000"
@@ -242,7 +242,7 @@ export function GoalDialog({ open, onClose, initialData }: Props) {
           )}
 
           {/* Deadline + Notes */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
             <label>
               <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 }}>Scadenza (opz.)</div>
               <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)}
